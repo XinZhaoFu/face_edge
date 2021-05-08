@@ -39,9 +39,11 @@ def get_iris(seg_label):
 
     contours, hierarchy = cv2.findContours(eyes_label, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     seg_label = cv2.Canny(seg_label, 0, 0)
+
     for contour in contours:
         if len(contour) < 5:
             continue
+        # 如果关键点小于5 无法确定眼睛轮廓  则不绘制
         (x, y), (a, b), angle = cv2.fitEllipse(contour)  # (x, y)中心点 (a, b)长短轴直径 angle中心旋转角度
         rad = int(min(a, b) * 0.5)
         if rad <= 7:
