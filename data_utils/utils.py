@@ -65,6 +65,8 @@ def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=Fa
 def load_and_preprocess_image_label(img_path, label_path):
     """
     对img和label进行预处理
+    需要注意的是为了保持label的准确其实不该做resize的 我是没有想到更好的方法才做的resize
+    这里因为用到了bn，会要求同一batch的size相同，所以用最近邻保持标签数值
     :param label_path:
     :param img_path:
     :return:
@@ -78,7 +80,7 @@ def load_and_preprocess_image_label(img_path, label_path):
 
     label = tf.io.read_file(label_path)
     label = tf.image.decode_png(label, channels=1)
-    label = tf.image.resize(label, [512, 512])
+    label = tf.image.resize(label, [512, 512], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
     label = tf.reshape(tensor=label, shape=(512, 512))
     label = label // 255
     label = tf.cast(label, tf.uint8)

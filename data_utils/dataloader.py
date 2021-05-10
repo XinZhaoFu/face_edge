@@ -2,12 +2,15 @@ from data_utils.utils import get_img_mask_list
 
 
 class Data_Loader_File:
-    def __init__(self, batch_size, data_augmentation=False, ):
+    def __init__(self,
+                 batch_size,
+                 data_augmentation=False,
+                 train_file_path='./data/train/',
+                 val_file_path='./data/val/'):
         self.batch_size = batch_size
         self.data_augmentation = data_augmentation
-
-        self.train_file_path = './data/train/'
-        self.val_file_path = './data/val/'
+        self.train_file_path = train_file_path
+        self.val_file_path = val_file_path
 
     def load_train_data(self, load_file_number):
         print('正在载入训练集')
