@@ -22,7 +22,7 @@ label	class
 np.set_printoptions(threshold=np.inf)
 
 
-def get_iris(seg_label):
+def get_iris(seg_label, is_canny=True):
     """
     读取分割标签，获得canny后的边缘标签记作edge_label，分割标签读取左右眼区域，获得轮廓，进行椭圆拟合获得椭圆中心点坐标以及长短轴直径
     以椭圆中心点坐标作为假定虹膜中心点坐标，以短轴半径微调作为假定虹膜半径
@@ -38,7 +38,9 @@ def get_iris(seg_label):
                 eyes_label[row, col] = 255
 
     contours, hierarchy = cv2.findContours(eyes_label, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    seg_label = cv2.Canny(seg_label, 0, 0)
+
+    if is_canny:
+        seg_label = cv2.Canny(seg_label, 0, 0)
 
     for contour in contours:
         if len(contour) < 5:
@@ -83,7 +85,7 @@ def get_nose(seg_label):
     # print(temp.shape, nose_label.shape)
     # print(ori_centroid_row, ori_centroid_col, new_centroid_row, new_centroid_col, s_rows, s_cols)
     temp[ori_centroid_row - new_centroid_row:ori_centroid_row - new_centroid_row + s_rows,
-    ori_centroid_col - new_centroid_col:ori_centroid_col - new_centroid_col + s_cols] = nose_label[:, :]
+        ori_centroid_col - new_centroid_col:ori_centroid_col - new_centroid_col + s_cols] = nose_label[:, :]
 
     for row in range(rows):
         for col in range(cols):

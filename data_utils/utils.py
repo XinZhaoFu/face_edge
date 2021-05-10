@@ -30,9 +30,14 @@ def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=Fa
 
     img_file_path_list = glob(img_path + '*.jpg')
     label_file_path_list = glob(label_path + '*.png')
+    """
+    正序保证文件对应
+    下面的check_img_label_list函数也是为了保证文件对应
+    对应后会匹配成对再打乱
+    不过目前的数据集打不打乱都可以
+    """
     img_file_path_list.sort()
     label_file_path_list.sort()
-
     assert len(img_file_path_list) == len(label_file_path_list)
 
     # 截取部分文件

@@ -1,6 +1,7 @@
 from glob import glob
 import numpy as np
 import cv2
+from lapa_label_generate import get_iris
 
 """
 label class         name
@@ -40,8 +41,7 @@ def code_label(label, class_code):
     :param class_code:
     :return:
     """
-    label = label / 255 * class_code
-    return label
+    return label / 255 * class_code
 
 
 def concat_label(labels, class_codes, num_label_flag, save_path='../data/temp/celeb_edge/', priority=None):
@@ -77,7 +77,10 @@ def concat_label(labels, class_codes, num_label_flag, save_path='../data/temp/ce
                 if label[row, col] != 0:
                     con_label[row, col] = label[row, col]
 
-    con_label = cv2.Canny(con_label, 0, 0)
+    # con_label = cv2.Canny(con_label, 0, 0)
+
+    con_label = get_iris(con_label, is_canny=True)
+
     cv2.imwrite(save_path + num_label_flag + '_edge.png', con_label)
     print(save_path + num_label_flag + '_edge.png')
 
@@ -103,6 +106,7 @@ def main():
         label_name = (label_file_path.split('/')[-1]).split('.')[0]
         num_label, class_label = label_name.split('_')[0], label_name[6:]
         class_code_label = get_class_code(class_label)
+
         if num_label_flag is None:
             num_label_flag = num_label
             labels.append(label)
