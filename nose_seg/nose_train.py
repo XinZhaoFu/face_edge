@@ -4,11 +4,7 @@ import datetime
 import tensorflow as tf
 import os
 from model.unet import UNet
-from model.double_path import DPNet
-from model.bisenetv2 import BisenetV2
 from data_utils.dataloader import Data_Loader_File
-import matplotlib.pyplot as plt
-import pandas as pd
 import setproctitle
 
 gpus = tf.config.list_physical_devices('GPU')
@@ -144,22 +140,9 @@ class train:
 
         model.summary()
 
-        return history
-
-
-def plot_learning_curves(history, plt_name):
-    pd.DataFrame(history.history).plot(figsize=(8, 5))
-    plt.grid(True)
-    plt.gca().set_ylim(0, 1)
-    plt.savefig('./log/'+plt_name+'.jpg')
-
 
 def train_init():
-    ex_info = 'celeb_label'
     start_time = datetime.datetime.now()
-
-    tran_tab = str.maketrans('- :.', '____')
-    plt_name = str(start_time).translate(tran_tab) + ex_info
 
     args = parseArgs()
     seg = train(load_weights=args.load_weights,
@@ -168,9 +151,12 @@ def train_init():
                 load_train_file_number=args.load_train_file_number,
                 load_val_file_number=args.load_val_file_number,
                 data_augmentation=args.data_augmentation,
-                learning_rate=args.learning_rate)
-    history = seg.model_train()
-    plot_learning_curves(history, plt_name)
+                learning_rate=args.learning_rate,
+                train_file_path='../data/nose_train/',
+                val_file_path='../data/nose_val/',
+                checkpoint_save_path='../checkpoint/detail_con_unet_nose_edge.ckpt')
+
+    seg.model_train()
 
     end_time = datetime.datetime.now()
     print('time:\t' + str(end_time - start_time).split('.')[0])

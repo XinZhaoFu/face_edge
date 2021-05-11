@@ -30,6 +30,8 @@ def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=Fa
 
     img_file_path_list = glob(img_path + '*.jpg')
     label_file_path_list = glob(label_path + '*.png')
+    assert len(img_file_path_list) == len(label_file_path_list)
+    print('[info] 数量校验通过')
     """
     正序保证文件对应
     下面的check_img_label_list函数也是为了保证文件对应
@@ -38,7 +40,6 @@ def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=Fa
     """
     img_file_path_list.sort()
     label_file_path_list.sort()
-    assert len(img_file_path_list) == len(label_file_path_list)
 
     # 截取部分文件
     if file_number > 0:
@@ -71,8 +72,7 @@ def load_and_preprocess_image_label(img_path, label_path):
     :param img_path:
     :return:
     """
-    print(img_path, label_path)
-
+    # print(img_path, label_path)
     image = tf.io.read_file(img_path)
     image = tf.image.decode_jpeg(image, channels=3)
     image = tf.image.resize(image, [512, 512])
@@ -105,10 +105,10 @@ def shuffle_file(img_file_list, label_file_list):
     return img_file_list, label_file_list
 
 
-def distribution_file(dis_img_file_list,
-                      dis_label_file_list,
-                      dis_img_file_path,
-                      dis_label_file_path):
+def distribution_img_label(dis_img_file_list,
+                           dis_label_file_list,
+                           dis_img_file_path,
+                           dis_label_file_path):
     """
     将img和label从一文件夹转至其他位置
     :param dis_img_file_list:
@@ -126,6 +126,18 @@ def distribution_file(dis_img_file_list,
         shutil.copyfile(img_file, dis_img_file_path + img_name)
         shutil.copyfile(label_file, dis_label_file_path + label_name)
         # print(img_file, label_file, dis_img_file_path + img_name, dis_label_file_path + label_name)
+
+
+def distribution_file(file_path_list, target_file_path):
+    """
+
+    :param file_path_list:
+    :param target_file_path:
+    :return:
+    """
+    for file_path in file_path_list:
+        file_name = file_path.split('/')[-1]
+        shutil.copyfile(file_path, target_file_path + file_name)
 
 
 def create_dir(folder_name):
