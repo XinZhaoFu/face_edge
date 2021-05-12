@@ -1,7 +1,7 @@
 from glob import glob
 import numpy as np
 import cv2
-from lapa_label_generate import get_iris
+from lapa_label_generate import get_iris, get_nose
 
 """
 label class         name
@@ -78,16 +78,11 @@ def concat_label(labels, class_codes, num_label_flag, save_path='../data/temp/ce
                     con_label[row, col] = label[row, col]
 
     # con_label = cv2.Canny(con_label, 0, 0)
-
+    con_label = get_nose(con_label)
     con_label = get_iris(con_label, is_canny=True)
 
     cv2.imwrite(save_path + num_label_flag + '_edge.png', con_label)
     print(save_path + num_label_flag + '_edge.png')
-
-
-def crop_nose(label):
-
-    return label
 
 
 def main():

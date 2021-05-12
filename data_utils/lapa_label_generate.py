@@ -57,10 +57,11 @@ def get_iris(seg_label, is_canny=True):
     return seg_label
 
 
-def get_nose(seg_label):
+def get_nose(seg_label, small_rate=0.6):
     """
     获得更小的鼻子轮廓
-    :param seg_label_path:
+    :param small_rate:
+    :param seg_label:
     :return:
     """
     nose_label = np.zeros(shape=seg_label.shape, dtype=np.uint8)
@@ -76,7 +77,6 @@ def get_nose(seg_label):
     # 暂时没用bbox信息 感觉写起来麻烦
     ori_centroid, _ = get_centroid_bbox(nose_label)
     ori_centroid_row, ori_centroid_col = int(ori_centroid[0]), int(ori_centroid[1])
-    small_rate = 0.6
     temp = np.zeros(shape=seg_label.shape, dtype=np.uint8)
     s_rows, s_cols = int(small_rate * rows), int(small_rate * cols)
     nose_label = cv2.resize(nose_label, dsize=(s_cols, s_rows), interpolation=cv2.INTER_NEAREST)
@@ -85,7 +85,7 @@ def get_nose(seg_label):
     # print(temp.shape, nose_label.shape)
     # print(ori_centroid_row, ori_centroid_col, new_centroid_row, new_centroid_col, s_rows, s_cols)
     temp[ori_centroid_row - new_centroid_row:ori_centroid_row - new_centroid_row + s_rows,
-        ori_centroid_col - new_centroid_col:ori_centroid_col - new_centroid_col + s_cols] = nose_label[:, :]
+    ori_centroid_col - new_centroid_col:ori_centroid_col - new_centroid_col + s_cols] = nose_label[:, :]
 
     for row in range(rows):
         for col in range(cols):

@@ -51,6 +51,9 @@ def celeb_label_distribution():
 
 
 if __name__ == '__main__':
+    """
+    都是复制操作不是移动操作
+    """
     # distribution()
 
     # distribution(ori_img_file_path='../data/lapa_ori_img/',
