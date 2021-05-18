@@ -8,27 +8,17 @@ from glob import glob
 
 np.set_printoptions(threshold=np.inf)
 
-# start_time = datetime.datetime.now()
-#
-# tran_tab = str.maketrans('- :.', '____')
-# start_time = str(start_time).translate(tran_tab)
-# print(start_time)
+img1 = cv2.imread('./data/temp/celeb_ori_img/0.jpg')
+rows, cols, channels = img1.shape
+label1 = cv2.imread('./data/temp/celeb_edge/00000_edge.png', 0)
 
-# intab = "aeiou"
-# outtab = "12345"
-# trantab = maketrans(intab, outtab)
+label1 = cv2.resize(label1, dsize=(rows, cols), interpolation=cv2.INTER_CUBIC)
 
-# str = "this is string example....wow!!!";
-# print
-# str.translate(trantab);
-#
-# file_list = []
-# for index in range(15):
-# file_list.extend(glob('./data/celeb_ori_label/' + str(index) + '/*.png'))
-file_list = glob('./data/celeb_ori_label/' + '*.png')
-print(len(file_list))
+for row in range(rows):
+    for col in range(cols):
+        if label1[row, col] > 128:
+            value = label1[row, col]
+            img1[row, col, :] = [value, value, value]
 
-file_list = tqdm(file_list)
-for file in file_list:
-    os.remove(file)
-    file_list.set_description("删除中")
+
+cv2.imwrite('./data/temp/merge.jpg', img1)
