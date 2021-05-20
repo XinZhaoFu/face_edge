@@ -47,7 +47,7 @@ def code_label(label, class_code):
 def concat_label(labels, class_codes, num_label_flag, save_path, contour_path, img_path, priority=None):
     """
     合并各类数字标签
-    同时需要注意遮盖问题
+    同时需要注意遮盖问题 目前的优先级是预估的 不一定是准确的
     labels 和 class_codes的索引需要对应
     :param img_path:
     :param contour_path:
@@ -118,6 +118,17 @@ def get_iris(seg_label, contour_path, label_name, img_path, is_canny=True):
 
 
 def get_eye_contour(info_path, img_rows, img_cols, label_rows, label_cols):
+    """
+    读取txt中的虹膜轮廓坐标 分别绘制两个实心多边形
+    这里需要img的尺寸和label的尺寸是因为 虹膜坐标是提取的原图的坐标 但是实心多边形是要画到label中去的
+    所以先在img尺寸下绘制 再通过resize(使用最近邻可以保证数值不变)变为label尺寸
+    :param info_path:
+    :param img_rows:
+    :param img_cols:
+    :param label_rows:
+    :param label_cols:
+    :return:
+    """
     contours_left, contours_right = [], []
     contours_left_x_sum, contours_left_y_sum = 0, 0
     contours_right_x_sum, contours_right_y_sum = 0, 0
