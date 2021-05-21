@@ -1,7 +1,6 @@
 from glob import glob
 import numpy as np
 import cv2
-from lapa_label_generate import get_nose
 
 """
 label class         name
@@ -24,6 +23,8 @@ label class         name
 16  hat             hat
 17  eye glasses     eye_g
 18  neck_l          neck_l
+--------------------------
+19  iris            iris
 """
 
 
@@ -87,79 +88,6 @@ def concat_label(labels, class_codes, num_label_flag, save_path, contour_path, i
     print(save_path + num_label_flag + '_edge.png')
 
 
-def get_iris(seg_label, contour_path, label_name, img_path, is_canny=True):
-    """
-    :param img_path:
-    :param label_name:
-    :param contour_path:
-    :param is_canny:
-    :param seg_label:
-    :return:
-    """
-    eyes_label = np.zeros(shape=seg_label.shape, dtype=np.uint8)
-    rows, cols = seg_label.shape
-
-    info_path = contour_path + label_name + '.txt'
-    img = cv2.imread(img_path + label_name + '.jpg', 0)
-    img_rows, img_cols = img.shape
-    iris_label, center_left_x, center_left_y, center_right_x, center_right_y = get_eye_contour(info_path, img_rows, img_cols, label_rows=rows, label_cols=cols)
-
-    for row in range(rows):
-        for col in range(cols):
-            if (seg_label[row, col] == 4 or seg_label[row, col] == 5) and iris_label[row, col] == 255:
-                seg_label[row, col] = 19
-
-    if is_canny:
-        seg_label = cv2.Canny(seg_label, 0, 0)
-    # seg_label = cv2.circle(seg_label, (center_left_x, center_left_y), 3, 255, 1)
-    # seg_label = cv2.circle(seg_label, (center_right_x, center_right_y), 3, 255, 1)
-
-    return seg_label
-
-
-def get_eye_contour(info_path, img_rows, img_cols, label_rows, label_cols):
-    """
-    读取txt中的虹膜轮廓坐标 分别绘制两个实心多边形
-    这里需要img的尺寸和label的尺寸是因为 虹膜坐标是提取的原图的坐标 但是实心多边形是要画到label中去的
-    所以先在img尺寸下绘制 再通过resize(使用最近邻可以保证数值不变)变为label尺寸
-    :param info_path:
-    :param img_rows:
-    :param img_cols:
-    :param label_rows:
-    :param label_cols:
-    :return:
-    """
-    contours_left, contours_right = [], []
-    contours_left_x_sum, contours_left_y_sum = 0, 0
-    contours_right_x_sum, contours_right_y_sum = 0, 0
-
-    with open(info_path, "r") as f:
-        for index, line in enumerate(f.readlines()):
-            line = line.strip('\n')
-            eye_contour_x = float(line.split(',')[0])
-            eye_contour_y = float(line.split(',')[1])
-            if index < 19:
-                contours_left.append([int(eye_contour_x), int(eye_contour_y)])
-                contours_left_x_sum += eye_contour_x
-                contours_left_y_sum += eye_contour_y
-            else:
-                contours_right.append([int(eye_contour_x), int(eye_contour_y)])
-                contours_right_x_sum += eye_contour_x
-                contours_right_y_sum += eye_contour_y
-
-    contours_left = np.array([contours_left], dtype=np.int32)
-    contours_right = np.array([contours_right], dtype=np.int32)
-    center_left_x = int(contours_left_x_sum // 19 * (label_rows / img_rows))
-    center_left_y = int(contours_left_y_sum // 19 * (label_cols / img_cols))
-    center_right_x = int(contours_right_x_sum // 19 * (label_rows / img_rows))
-    center_right_y = int(contours_right_y_sum // 19 * (label_cols / img_cols))
-
-    iris_label = np.zeros(shape=(img_rows, img_cols), dtype=np.uint8)
-    cv2.fillPoly(iris_label, contours_left, 255)
-    cv2.fillPoly(iris_label, contours_right, 255)
-    iris_label = cv2.resize(iris_label, dsize=(label_rows, label_cols), interpolation=cv2.INTER_NEAREST)
-
-    return iris_label, center_left_x, center_left_y, center_right_x, center_right_y
 
 
 def main():
