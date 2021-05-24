@@ -1,6 +1,9 @@
 from glob import glob
 import numpy as np
 import cv2
+import datetime
+from tqdm import tqdm
+from label_generate import get_contour_pupil_label, get_nose_label
 
 """
 label class         name
@@ -45,15 +48,15 @@ def code_label(label, class_code):
     return label / 255 * class_code
 
 
-def concat_label(labels, class_codes, num_label_flag, save_path, contour_path, img_path, priority=None):
+def concat_label(labels, class_codes, contour_point_file_path, nose_point_file_path, img_rows, img_cols, priority=None):
     """
     合并各类数字标签
     同时需要注意遮盖问题 目前的优先级是预估的 不一定是准确的
     labels 和 class_codes的索引需要对应
-    :param img_path:
-    :param contour_path:
-    :param save_path:
-    :param num_label_flag:
+    :param nose_point_file_path:
+    :param contour_point_file_path:
+    :param img_cols:
+    :param img_rows:
     :param priority:
     :param class_codes:
     :param labels:
@@ -63,7 +66,7 @@ def concat_label(labels, class_codes, num_label_flag, save_path, contour_path, i
         priority = (1, 14, 11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 15, 16, 17, 18)
 
     con_label = np.zeros(shape=labels[0].shape, dtype=np.uint8)
-    rows, cols = labels[0].shape
+    label_rows, label_cols = labels[0].shape
     priority_labels = []
 
     for pri_code in priority:
@@ -75,68 +78,91 @@ def concat_label(labels, class_codes, num_label_flag, save_path, contour_path, i
 
     # 这里效率很低 后面觉得慢的话需要优化这里
     for label in priority_labels:
-        for row in range(rows):
-            for col in range(cols):
+        for row in range(label_rows):
+            for col in range(label_cols):
                 if label[row, col] != 0:
                     con_label[row, col] = label[row, col]
 
-    # con_label = cv2.Canny(con_label, 0, 0)
-    con_label = get_nose(con_label, small_rate=0.9)
-    con_label = get_iris(con_label, contour_path, str(int(num_label_flag)), img_path=img_path, is_canny=True)
+    con_label = get_contour_pupil_label(label=con_label,
+                                        contour_point_file_path=contour_point_file_path,
+                                        img_rows=img_rows,
+                                        img_cols=img_cols)
+    con_label = cv2.Canny(con_label, 0, 0)
+    con_label = get_nose_label(label=con_label,
+                               label_rows=label_rows,
+                               label_cols=label_cols,
+                               img_rows=img_rows,
+                               img_cols=img_cols,
+                               nose_point_file_path=nose_point_file_path,
+                               draw_type=0)
 
-    cv2.imwrite(save_path + num_label_flag + '_edge.png', con_label)
-    print(save_path + num_label_flag + '_edge.png')
-
-
+    return con_label
 
 
 def main():
-    save_path = '../data/temp/celeb_edge/'
-    contour_path = '../data/temp/eye_contour/'
-    img_path = '../data/temp/celeb_ori_img/'
-    label_path = '../data/temp/ori_celeb_label/'
+    # nose可以是分割的 seg  也可以是拟合的 fit
+    nose_type = 'draw'
+    save_path = '../data/celeb_edge/'
+    contour_point_file_path = '../data/celeb_eye_contour/'
+    nose_point_file_path = '../data/celeb_106points/'
+    img_path = '../data/celeb_ori_img/'
+    label_path = '../data/celeb_ori_label/'
     label_file_list = glob(label_path + '*.png')
     label_file_list.sort()
 
-    num_label_flag = None
+    last_label_name = None
     labels = []
     class_codes = []
-
-    for label_file_path in label_file_list:
+    flag = 1
+    for index in tqdm(range(len(label_file_list))):
+        label_file_path = label_file_list[index]
         label = cv2.imread(label_file_path, 0)
 
         label_name = (label_file_path.split('/')[-1]).split('.')[0]
-        num_label, class_label = label_name.split('_')[0], label_name[6:]
-        class_code_label = get_class_code(class_label)
+        cur_label_name, label_class = label_name.split('_')[0], label_name[6:]
+        if nose_type == 'draw' and label_class == 'nose':
+            continue
+        class_code_label = get_class_code(label_class)
 
-        if num_label_flag is None:
-            num_label_flag = num_label
+        if last_label_name is None:
+            last_label_name = cur_label_name
             labels.append(label)
             class_codes.append(class_code_label)
 
-        if num_label_flag == num_label:
+        if last_label_name == cur_label_name:
             labels.append(label)
             class_codes.append(class_code_label)
-        else:
-            concat_label(labels=labels,
-                         class_codes=class_codes,
-                         num_label_flag=num_label_flag,
-                         contour_path=contour_path,
-                         save_path=save_path,
-                         img_path=img_path)
 
-            num_label_flag = num_label
+        if last_label_name != cur_label_name:
+            last_label_name_easy = str(int(last_label_name))
+            img = cv2.imread(img_path + last_label_name_easy + '.jpg')
+            img_rows, img_cols, _ = img.shape
+            last_contour_point_file_path = contour_point_file_path + last_label_name_easy + '.txt'
+            last_nose_point_file_path = nose_point_file_path + last_label_name_easy + '.txt'
+
+            res_label = concat_label(labels, class_codes, last_contour_point_file_path, last_nose_point_file_path,
+                                     img_rows, img_cols)
+            cv2.imwrite(save_path+last_label_name_easy+'.png', res_label)
+
+            last_label_name = cur_label_name
             labels = [label]
             class_codes = [class_code_label]
 
-    if len(labels) != 0:
-        concat_label(labels=labels,
-                     class_codes=class_codes,
-                     num_label_flag=num_label_flag,
-                     contour_path=contour_path,
-                     save_path=save_path,
-                     img_path=img_path)
+        if index == len(label_file_list)-1:
+            cur_label_name_easy = str(int(cur_label_name))
+            img = cv2.imread(img_path + cur_label_name_easy + '.jpg')
+            img_rows, img_cols, _ = img.shape
+            cur_contour_point_file_path = contour_point_file_path + cur_label_name_easy + '.txt'
+            cur_nose_point_file_path = nose_point_file_path + cur_label_name_easy + '.txt'
+
+            res_label = concat_label(labels, class_codes, cur_contour_point_file_path, cur_nose_point_file_path,
+                                     img_rows, img_cols)
+            cv2.imwrite(save_path + cur_label_name_easy + '.png', res_label)
 
 
 if __name__ == '__main__':
+    start_time = datetime.datetime.now()
     main()
+    end_time = datetime.datetime.now()
+    print('time:\t' + str(end_time - start_time).split('.')[0])
+

@@ -5,6 +5,7 @@ from glob import glob
 """
     把生成各类局部label的函数都放在了这里 目前放有鼻子、虹膜 预计未来还会有嘴巴
 """
+np.set_printoptions(threshold=np.inf)
 
 
 def get_nose_label(label, label_rows, label_cols, img_rows, img_cols, nose_point_file_path, draw_type=0):
@@ -23,14 +24,13 @@ def get_nose_label(label, label_rows, label_cols, img_rows, img_cols, nose_point
 
     # 新增三点 为三对两点的中心点
     new_point1_index_list, new_point2_index_list = [3, 5, 7], [6, 11, 12]
-    nose_point_list = get_point(nose_point_file_path, point_x_resize, point_y_resize, 
-                                new_point1_index_list, new_point2_index_list, nose_index_list)
+    nose_point_list = get_nose_point(nose_point_file_path, point_x_resize, point_y_resize,
+                                     new_point1_index_list, new_point2_index_list, nose_index_list)
 
     # 因为有的图片是有遮挡的 会存在无关键点的情况 则对label不做处理 直接返回无鼻子轮廓的label
-    if len(nose_point_list) == 0:
+    if nose_point_list is None:
         return label
 
-    
     if draw_type:
         # 如果打算绘制非拟合鼻子(鼻子轮廓为直线型 非曲线型)   则输入鼻子关键点索引 需要分成组 每组内前后两点相连
 
@@ -46,21 +46,20 @@ def get_nose_label(label, label_rows, label_cols, img_rows, img_cols, nose_point
                 11、13、4、5点构成的半包围左鼻侧 会舍弃鼻侧上半截 同时包含一点鼻下沿
                 12、14、8、7点构成的半包围右鼻侧 同上
         """
-        line_point_index_list = [[2, 3], [11, 13, 4, 5], [12, 14, 8, 7]]
-        label = draw_nose_line(label, nose_point_list, line_point_index_list)
-
-        return label
+        # line_point_index_list = [[2, 3], [11, 13, 4, 5], [12, 14, 8, 7]]
+        line_point_index_list = [[2, 3], [], []]
+        label = draw_nose_line(label, nose_point_list, line_point_index_list, thickness=1)
 
     # 绘制拟合鼻子轮廓 用传入的三组点(三组分别为左鼻侧、右鼻侧、鼻下沿)分别进行多项式拟合 然后通过插值(点距为3) 获得更多点坐标 并将这些点相连
-    fit_point_index_list = [[11, 13, 4], [12, 14, 8], [4, 5, 6, 7, 8]]
-    label = draw_nose_fit(label, nose_point_list, fit_point_index_list)
+    fit_point_index_list = [[11, 13, 4], [12, 14, 8], []]
+    label = draw_nose_fit(label, nose_point_list, fit_point_index_list, thickness=1)
 
     return label
 
-def get_iris_label(label, contour_point_file_path, img_rows, img_cols):
 
+def get_contour_pupil_label(label, contour_point_file_path, img_rows, img_cols):
     label_rows, label_cols = label.shape
-    iris_label, center_left_x, center_left_y, center_right_x, center_right_y = get_eye_contour(contour_point_file_path, img_rows, img_cols, label_rows, label_cols)
+    iris_label, _ = draw_contour_pupil(contour_point_file_path, img_rows, img_cols, label_rows, label_cols)
 
     for row in range(label_rows):
         for col in range(label_cols):
@@ -70,72 +69,45 @@ def get_iris_label(label, contour_point_file_path, img_rows, img_cols):
     return label
 
 
-def nose_fit(nose_left_point_list, nose_right_point_list, nose_lower_point_list):
-    """
-    鼻子拟合函数 返回拟合后插值坐标点
-    :param nose_left_point_list:
-    :param nose_right_point_list:
-    :param nose_lower_point_list:
-    :return:
-    """
-    nose_left_fit_point = nose_side_fit(nose_left_point_list)
-    nose_right_fit_point = nose_side_fit(nose_right_point_list)
-    nose_lower_fit_point = nose_lower_fit(nose_lower_point_list)
-
-    return nose_left_fit_point, nose_right_fit_point, nose_lower_fit_point
-
-
-def nose_side_fit(nose_side_point_list):
+def nose_side_fit(point_list):
     """
     鼻侧x、y颠倒拟合二次函数 以3为点距进行插值 获得插值后的x、y值
-    :param nose_side_point_list:
+    :param point_list:
     :return:
     """
-    nose_side_point_list = np.array(nose_side_point_list)
-    nose_side_point_x = nose_side_point_list[:, 1]
-    nose_side_point_y = nose_side_point_list[:, 0]
+    point_list = np.array(point_list)
+    point_x = point_list[:, 1]
+    point_y = point_list[:, 0]
 
-    nose_side_fit_point_x, nose_side_fit_point_y = fit_interpolation(nose_side_point_x, 
-                                                                    nose_side_point_y, 
-                                                                    2,
-                                                                    nose_side_point_x[0],
-                                                                    nose_side_point_x[-1],
-                                                                    3
-                                                                    )
+    fit_point_x, fit_point_y = fit_interpolation(point_x, point_y, 2, point_x[0], point_x[-1], 3)
 
-    nose_side_fit_point = np.empty(shape=(len(nose_side_fit_point_x), 2), dtype=np.int32)
-    nose_side_fit_point[:, 1] = nose_side_fit_point_x
-    nose_side_fit_point[:, 0] = nose_side_fit_point_y
+    fit_point = np.empty(shape=(len(fit_point_x), 2), dtype=np.int32)
+    fit_point[:, 1] = fit_point_x
+    fit_point[:, 0] = fit_point_y
 
-    return nose_side_fit_point
+    return fit_point
 
 
-def nose_lower_fit(nose_lower_point_list):
+def nose_lower_fit(point_list):
     """
     鼻下沿拟合4次函数 以3为点距 以五点组成的四段中的边缘两段的中点分别作为插值起始点 获得x、y值
-    :param nose_lower_point_list:
+    :param point_list:
     :return:
     """
-    nose_lower_point_list = np.array(nose_lower_point_list)
-    nose_lower_point_x = nose_lower_point_list[:, 0]
-    nose_lower_point_y = nose_lower_point_list[:, 1]
+    point_list = np.array(point_list)
+    point_x = point_list[:, 0]
+    point_y = point_list[:, 1]
 
-    nose_lower_point_left_x = (nose_lower_point_x[0] + nose_lower_point_x[1]) // 2
-    nose_lower_point_right_x = (nose_lower_point_x[3] + nose_lower_point_x[4]) // 2
+    inter_point_left_x = (point_x[0] + point_x[1]) // 2
+    inter_point_right_x = (point_x[3] + point_x[4]) // 2
 
-    nose_lower_fit_point_x, nose_lower_fit_point_y = fit_interpolation(nose_lower_point_x, 
-                                                                        nose_lower_point_y,
-                                                                        4,
-                                                                        nose_lower_point_left_x,
-                                                                        nose_lower_point_right_x,
-                                                                        3
-                                                                        )
-    
-    nose_lower_fit_point = np.empty(shape=(len(nose_lower_fit_point_x), 2), dtype=np.int32)
-    nose_lower_fit_point[:, 0] = nose_lower_fit_point_x
-    nose_lower_fit_point[:, 1] = nose_lower_fit_point_y
+    fit_point_x, fit_point_y = fit_interpolation(point_x, point_y, 4, inter_point_left_x, inter_point_right_x, 3)
 
-    return nose_lower_fit_point
+    fit_point = np.empty(shape=(len(fit_point_x), 2), dtype=np.int32)
+    fit_point[:, 0] = fit_point_x
+    fit_point[:, 1] = fit_point_y
+
+    return fit_point
 
 
 def fit_interpolation(point_x, point_y, polynomial_degree, inter_left, inter_right, inter_space):
@@ -148,7 +120,26 @@ def fit_interpolation(point_x, point_y, polynomial_degree, inter_left, inter_rig
     return fit_point_x, fit_point_y
 
 
-def get_point(point_file_path, point_x_resize, point_y_resize, new_point1_index_list, new_point2_index_list, nose_index_list):
+def get_nose_point(point_file_path, point_x_resize, point_y_resize, new_point1_index_list, new_point2_index_list,
+                   nose_index_list):
+    all_point_list = get_point(point_file_path, point_x_resize, point_y_resize)
+    if len(all_point_list) == 0:
+        return None
+    nose_point_list = extract_index_point(all_point_list, nose_index_list)
+
+    if len(nose_point_list) == 15 and new_point1_index_list is not None and new_point2_index_list is not None:
+        # 自增点  获得46与49中心点、48与80中心点、50与81中心点
+        assert len(new_point1_index_list) == len(new_point2_index_list)
+        for point1_index, point2_index in zip(new_point1_index_list, new_point2_index_list):
+            point1, point2 = nose_point_list[point1_index], nose_point_list[point2_index]
+            new_point_x = (point1[0] + point2[0]) / 2
+            new_point_y = (point1[1] + point2[1]) / 2
+            nose_point_list.append([new_point_x, new_point_y])
+
+    return nose_point_list
+
+
+def get_point(point_file_path, point_x_resize, point_y_resize):
     point_list = []
     with open(point_file_path, "r") as f:
         for index, line in enumerate(f.readlines()):
@@ -157,31 +148,20 @@ def get_point(point_file_path, point_x_resize, point_y_resize, new_point1_index_
                 break
             point_x_f = float(line.split(',')[0]) * point_x_resize
             point_y_f = float(line.split(',')[1]) * point_y_resize
-            if index in nose_index_list:
-                point_list.append([point_x_f, point_y_f])
-
+            point_list.append([point_x_f, point_y_f])
     if f:
         f.close()
 
-    if len(point_list) == 15 and new_point1_index_list is not None and new_point2_index_list is not None:
-        # 自增点  获得46与49中心点、48与80中心点、50与81中心点
-        assert len(new_point1_index_list) == len(new_point2_index_list)
-        for point1_index, point2_index in zip(new_point1_index_list, new_point2_index_list):
-            point1, point2 = point_list[point1_index], point_list[point2_index]
-            new_point_x = (point1[0] + point2[0]) / 2
-            new_point_y = (point1[1] + point2[1]) / 2
-            point_list.append([new_point_x, new_point_y])
-    
     return point_list
 
 
 def draw_line(label, point_list, color, thickness):
     for index in range(1, len(point_list)):
-        point1 = (point_list[index-1, 0], point_list[index-1, 1])
-        point2 = (point_list[index, 0], point_list[index, 1])
+        point1 = (int(point_list[index-1][0]), int(point_list[index-1][1]))
+        point2 = (int(point_list[index][0]), int(point_list[index][1]))
 
         cv2.line(label, point1, point2, color, thickness, cv2.LINE_AA)
-    
+
     return label
 
 
@@ -193,73 +173,76 @@ def extract_index_point(point_list, point_index_list):
     return extract_point_list
 
 
-def draw_nose_fit(label, nose_point_list, fit_point_index_list):
-    nose_left_point_list = extract_index_point(nose_point_list, fit_point_index_list[0])
-    nose_right_point_list = extract_index_point(nose_point_list, fit_point_index_list[1])
-    nose_lower_point_list = extract_index_point(nose_point_list, fit_point_index_list[2])
-
-    nose_left_fit_point, nose_right_fit_point, nose_lower_fit_point = nose_fit(nose_left_point_list,
-                                                                                nose_right_point_list,
-                                                                                nose_lower_point_list)
-
-    label = draw_line(label, nose_left_fit_point, 255, 2)
-    label = draw_line(label, nose_right_fit_point, 255, 2)
-    label = draw_line(label, nose_lower_fit_point, 255, 2)
-
-    return label
-
-def draw_nose_line(label, nose_point_list, line_point_index_list):
-    nose_bridge_point_list = extract_index_point(nose_point_list, line_point_index_list[0])
-    nose_left_point_list = extract_index_point(nose_point_list, line_point_index_list[1])
-    nose_right_point_list = extract_index_point(nose_point_list, line_point_index_list[2])
-
-    label = draw_line(label, nose_bridge_point_list, 255, 2)
-    label = draw_line(label, nose_left_point_list, 255, 2)
-    label = draw_line(label, nose_right_point_list, 255, 2)
+def draw_nose_fit(label, nose_point_list, fit_point_index_list, thickness):
+    if len(fit_point_index_list[0]) != 0:
+        nose_left_point_list = extract_index_point(nose_point_list, fit_point_index_list[0])
+        nose_left_fit_point = nose_side_fit(nose_left_point_list)
+        label = draw_line(label, nose_left_fit_point, 255, thickness)
+    if len(fit_point_index_list[1]) != 0:
+        nose_right_point_list = extract_index_point(nose_point_list, fit_point_index_list[1])
+        nose_right_fit_point = nose_side_fit(nose_right_point_list)
+        label = draw_line(label, nose_right_fit_point, 255, thickness)
+    if len(fit_point_index_list[2]) != 0:
+        nose_lower_point_list = extract_index_point(nose_point_list, fit_point_index_list[2])
+        nose_lower_fit_point = nose_lower_fit(nose_lower_point_list)
+        label = draw_line(label, nose_lower_fit_point, 255, thickness)
 
     return label
 
 
-def get_eye_contour(info_path, img_rows, img_cols, label_rows, label_cols):
-    """
-    读取txt中的虹膜轮廓坐标 分别绘制两个实心多边形
-    这里需要img的尺寸和label的尺寸是因为 虹膜坐标是提取的原图的坐标 但是实心多边形是要画到label中去的
-    所以先在img尺寸下绘制 再通过resize(使用最近邻可以保证数值不变)变为label尺寸
-    :param info_path:
-    :param img_rows:
-    :param img_cols:
-    :param label_rows:
-    :param label_cols:
-    :return:
-    """
-    contours_left, contours_right = [], []
-    contours_left_x_sum, contours_left_y_sum = 0, 0
-    contours_right_x_sum, contours_right_y_sum = 0, 0
+def draw_nose_line(label, nose_point_list, line_point_index_list, thickness):
+    if len(line_point_index_list[0]) != 0:
+        nose_bridge_point_list = extract_index_point(nose_point_list, line_point_index_list[0])
+        label = draw_line(label, nose_bridge_point_list, 255, thickness)
+    if len(line_point_index_list[1]) != 0:
+        nose_left_point_list = extract_index_point(nose_point_list, line_point_index_list[1])
+        label = draw_line(label, nose_left_point_list, 255, thickness)
+    if len(line_point_index_list[2]) != 0:
+        nose_right_point_list = extract_index_point(nose_point_list, line_point_index_list[2])
+        label = draw_line(label, nose_right_point_list, 255, thickness)
 
-    with open(info_path, "r") as f:
-        for index, line in enumerate(f.readlines()):
-            line = line.strip('\n')
-            eye_contour_x = float(line.split(',')[0])
-            eye_contour_y = float(line.split(',')[1])
-            if index < 19:
-                contours_left.append([int(eye_contour_x), int(eye_contour_y)])
-                contours_left_x_sum += eye_contour_x
-                contours_left_y_sum += eye_contour_y
-            else:
-                contours_right.append([int(eye_contour_x), int(eye_contour_y)])
-                contours_right_x_sum += eye_contour_x
-                contours_right_y_sum += eye_contour_y
+    return label
 
-    contours_left = np.array([contours_left], dtype=np.int32)
-    contours_right = np.array([contours_right], dtype=np.int32)
-    center_left_x = int(contours_left_x_sum // 19 * (label_rows / img_rows))
-    center_left_y = int(contours_left_y_sum // 19 * (label_cols / img_cols))
-    center_right_x = int(contours_right_x_sum // 19 * (label_rows / img_rows))
-    center_right_y = int(contours_right_y_sum // 19 * (label_cols / img_cols))
+
+def draw_contour_pupil(point_file_path, img_rows, img_cols, label_rows, label_cols):
+    contour_left, contour_right, center_left, center_right = get_eye_point(point_file_path)
 
     iris_label = np.zeros(shape=(img_rows, img_cols), dtype=np.uint8)
-    cv2.fillPoly(iris_label, contours_left, 255)
-    cv2.fillPoly(iris_label, contours_right, 255)
+    center_label = np.zeros(shape=(img_rows, img_cols), dtype=np.uint8)  # 暂不做实现  返回为空
+
+    if contour_left is None or contour_right is None:
+        return iris_label, center_label
+    if contour_left.shape != (1, 19, 2) or contour_right.shape != (1, 19, 2):
+        return iris_label, center_label
+
+    cv2.fillPoly(iris_label, contour_left, 255)
+    cv2.fillPoly(iris_label, contour_right, 255)
     iris_label = cv2.resize(iris_label, dsize=(label_rows, label_cols), interpolation=cv2.INTER_NEAREST)
 
-    return iris_label, center_left_x, center_left_y, center_right_x, center_right_y
+    return iris_label, center_label
+
+
+def get_eye_point(point_file_path):
+    all_point_list = get_point(point_file_path, 1, 1)
+    if len(all_point_list) == 0:
+        return None, None, None, None
+
+    temp_left_x_sum, temp_left_y_sum, temp_right_x_sum, temp_right_y_sum = 0, 0, 0, 0
+    contour_left, contour_right = [], []
+
+    for index in range(len(all_point_list)):
+        point_x, point_y = int(all_point_list[index][0]), int(all_point_list[index][1])
+        if index < 19:
+            contour_left.append([point_x, point_y])
+            temp_left_x_sum += point_x
+            temp_left_y_sum += point_y
+        else:
+            contour_right.append([point_x, point_y])
+            temp_right_x_sum += point_x
+            temp_right_y_sum += point_y
+    contour_left = np.array([contour_left], dtype=np.int32)
+    contour_right = np.array([contour_right], dtype=np.int32)
+    center_left = [temp_left_x_sum // 19, temp_left_y_sum // 19]
+    center_right = [temp_right_x_sum // 19, temp_right_y_sum // 19]
+
+    return contour_left, contour_right, center_left, center_right
