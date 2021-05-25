@@ -4,12 +4,11 @@ import datetime
 import tensorflow as tf
 import os
 from model.unet import UNet
-from model.double_path import DPNet
-from model.bisenetv2 import BisenetV2
 from data_utils.dataloader import Data_Loader_File
 import matplotlib.pyplot as plt
 import pandas as pd
 import setproctitle
+from loss.loss import focal_loss, dice_loss
 
 
 gpus = tf.config.list_physical_devices('GPU')
@@ -22,6 +21,7 @@ setproctitle.setproctitle("face_edge")
 def parseArgs():
     """
     获得参数
+
     :return:
     """
     parser = argparse.ArgumentParser(description='face edge demo')
@@ -104,7 +104,7 @@ class train:
         :return:
         """
         with self.strategy.scope():
-            model = UNet(filters=32, num_class=2, semantic_num_cbr=1, detail_num_cbr=4)
+            model = UNet(filters=32, num_class=1, semantic_num_cbr=1, detail_num_cbr=4, end_activation='sigmoid')
 
             if self.learning_rate > 0:
                 print('使用sgd,其值为：\t' + str(self.learning_rate))
@@ -117,7 +117,7 @@ class train:
                 print('使用adam')
                 model.compile(
                     optimizer='Adam',
-                    loss=tf.keras.losses.CategoricalCrossentropy(),
+                    loss=dice_loss(),
                     metrics=['accuracy']
                 )
 

@@ -77,9 +77,9 @@ def load_and_preprocess_image_label(img_path, label_path):
     label = tf.image.decode_png(label, channels=1)
     label = tf.image.resize(label, [512, 512], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
     label = tf.reshape(tensor=label, shape=(512, 512))
-    label = label // 255
-    label = tf.cast(label, tf.uint8)
-    label = tf.one_hot(indices=label, depth=2, on_value=1, off_value=0)
+    label = tf.cast(label, tf.float32) / 255.0
+    # label = tf.cast(label, tf.uint8)
+    # label = tf.one_hot(indices=label, depth=2, on_value=1, off_value=0)
 
     print(image.shape, label.shape)
     return image, label

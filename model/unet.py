@@ -45,12 +45,13 @@ class Up_CBR_Block(Model):
 
 
 class UNet(Model):
-    def __init__(self, filters=32, num_class=2, semantic_num_cbr=1, detail_num_cbr=4):
+    def __init__(self, filters=32, num_class=2, semantic_num_cbr=1, detail_num_cbr=4, end_activation='softmax'):
         super(UNet, self).__init__()
         self.filters = filters
         self.num_class = num_class
         self.semantic_num_cbr = semantic_num_cbr
         self.detail_num_cbr = detail_num_cbr
+        self.end_activation = end_activation
 
         self.cbr_block1 = CBR_Block(filters=self.filters, num_cbr=self.semantic_num_cbr, block_name='down1')
         self.cbr_block2 = CBR_Block(filters=self.filters, num_cbr=self.semantic_num_cbr, block_name='down2')
@@ -70,7 +71,7 @@ class UNet(Model):
 
         self.cbr_block_detail = CBR_Block(filters=self.filters, num_cbr=self.detail_num_cbr, block_name='detail')
 
-        self.con_end = Con_Bn_Act(filters=self.num_class, activation='softmax')
+        self.con_end = Con_Bn_Act(filters=self.num_class, activation=self.end_activation)
 
         self.pool = MaxPooling2D(padding='same')
 

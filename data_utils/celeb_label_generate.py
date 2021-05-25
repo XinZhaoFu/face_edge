@@ -89,8 +89,6 @@ def concat_label(labels, class_codes, contour_point_file_path, nose_point_file_p
                                         img_cols=img_cols)
     con_label = cv2.Canny(con_label, 0, 0)
     con_label = get_nose_label(label=con_label,
-                               label_rows=label_rows,
-                               label_cols=label_cols,
                                img_rows=img_rows,
                                img_cols=img_cols,
                                nose_point_file_path=nose_point_file_path,
@@ -113,7 +111,7 @@ def main():
     last_label_name = None
     labels = []
     class_codes = []
-    flag = 1
+
     for index in tqdm(range(len(label_file_list))):
         label_file_path = label_file_list[index]
         label = cv2.imread(label_file_path, 0)

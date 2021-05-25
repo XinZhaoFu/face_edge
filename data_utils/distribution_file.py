@@ -28,16 +28,16 @@ def img_label_distribution(ori_img_file_path='../data/lapa_ori_img/',
     recreate_dir(train_label_file_path)
 
     print('[info] -- -- --\t train数据分发 \t-- -- --')
-    distribution_img_label(dis_img_file_list=ori_img_file_list[:train_file_num],
-                           dis_label_file_list=ori_label_file_list[:train_file_num],
-                           dis_img_file_path=train_img_file_path,
-                           dis_label_file_path=train_label_file_path)
+    distribution_img_label(distribution_img_file_list=ori_img_file_list[:train_file_num],
+                           distribution_label_file_list=ori_label_file_list[:train_file_num],
+                           distribution_img_file_path=train_img_file_path,
+                           distribution_label_file_path=train_label_file_path)
 
     print('[info] -- -- --\t val数据分发 \t-- -- --')
-    distribution_img_label(dis_img_file_list=ori_img_file_list[train_file_num:],
-                           dis_label_file_list=ori_label_file_list[train_file_num:],
-                           dis_img_file_path=val_img_file_path,
-                           dis_label_file_path=val_label_file_path)
+    distribution_img_label(distribution_img_file_list=ori_img_file_list[train_file_num:],
+                           distribution_label_file_list=ori_label_file_list[train_file_num:],
+                           distribution_img_file_path=val_img_file_path,
+                           distribution_label_file_path=val_label_file_path)
 
 
 def celeb_label_distribution():
@@ -48,6 +48,30 @@ def celeb_label_distribution():
         temp_label_path = label_path + str(index) + '/'
         label_file_list = glob(temp_label_path+'*.png')
         distribution_file(label_file_list, save_label_path)
+
+
+def celeb_img_edge_distribution():
+    img_path = '../data/celeb_ori_img/'
+    edge_path = '../data/celeb_edge/'
+    save_train_img_path = '../data/temp/train/img/'
+    save_train_label_path = '../data/temp/train/label/'
+    save_val_img_path = '../data/temp/val/img/'
+    save_val_label_path = '../data/temp/val/label/'
+
+    img_file_path_list = glob(img_path + '*.jpg')
+    label_file_path_list = glob(edge_path + '*.png')
+    print(len(img_file_path_list), len(label_file_path_list))
+
+    img_file_path_list.sort()
+    label_file_path_list.sort()
+
+    img_file_path_list = img_file_path_list[:300]
+    label_file_path_list = label_file_path_list[:300]
+
+    distribution_img_label(img_file_path_list[:200], label_file_path_list[:200],
+                           save_train_img_path, save_train_label_path)
+    distribution_img_label(img_file_path_list[200:], label_file_path_list[200:],
+                           save_val_img_path, save_val_label_path)
 
 
 if __name__ == '__main__':
@@ -70,5 +94,5 @@ if __name__ == '__main__':
     #                        val_img_file_path='../data/nose_val/img/',
     #                        val_label_file_path='../data/nose_val/label/')
 
-    celeb_label_distribution()
-
+    # celeb_label_distribution()
+    celeb_img_edge_distribution()
