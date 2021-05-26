@@ -43,12 +43,12 @@ def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=Fa
         print('截取部分文件 其数量为：\t' + str(file_number))
         if file_number > len(img_file_path_list):
             file_number = len(img_file_path_list)
-        img_file_path_list = img_file_path_list[:file_number],
+        img_file_path_list = img_file_path_list[:file_number]
         label_file_path_list = label_file_path_list[:file_number]
     else:
         print('不截取文件 其数量为：\t' + str(len(img_file_path_list)))
 
-    check_img_label_list(img_file_list=img_file_path_list, label_file_list=label_file_path_list)
+    check_img_label_list(img_file_path_list, label_file_path_list)
 
     image_label_ds = tf.data.Dataset.from_tensor_slices((img_file_path_list, label_file_path_list))
     image_label_ds = image_label_ds.map(load_and_preprocess_image_label, num_parallel_calls=autotune)

@@ -6,6 +6,7 @@ from skimage.measure import regionprops
 """
     把生成各类局部label的函数都放在了这里 目前放有鼻子、虹膜 预计未来还会有嘴巴
 """
+
 np.set_printoptions(threshold=np.inf)
 
 
@@ -446,14 +447,17 @@ def get_nose_by_seg_label(label, small_rate=1.0):
     :return:
     """
     nose_label = np.zeros(shape=label.shape, dtype=np.uint8)
-
     rows, cols = label.shape
 
-    for row in range(rows):
-        for col in range(cols):
-            if label[row][col] == 6:
-                label[row][col] = 1
-                nose_label[row][col] = 6
+    # for row in range(rows):
+    #     for col in range(cols):
+    #         if label[row][col] == 6:
+    #             label[row][col] = 1
+    #             nose_label[row][col] = 6
+    label_target_points = get_target_point(label, 6)
+    for target_point in label_target_points:
+        label[target_point[0]][target_point[1]] = 1
+        nose_label[target_point[0]][target_point[1]] = 6
 
     # 暂时没用bbox信息 感觉写起来麻烦
     ori_centroid, _ = get_centroid_bbox(nose_label)
@@ -467,9 +471,29 @@ def get_nose_by_seg_label(label, small_rate=1.0):
     temp[ori_centroid_row - new_centroid_row: ori_centroid_row - new_centroid_row + s_rows,
         ori_centroid_col - new_centroid_col: ori_centroid_col - new_centroid_col + s_cols] = nose_label[:, :]
 
-    for row in range(rows):
-        for col in range(cols):
-            if temp[row][col] == 6:
-                label[row][col] = 6
+    # for row in range(rows):
+    #     for col in range(cols):
+    #         if temp[row][col] == 6:
+    #             label[row][col] = 6
+    temp_target_points = get_target_point(temp, 6)
+    for target_point in temp_target_points:
+        label[target_point[0]][target_point[1]] = 6
 
     return label
+
+
+def get_target_point(label, target):
+    """
+    对于一个数组(这里用于2维label) 给出指定值的索引集合
+
+    :param label:
+    :param target:
+    :return:
+    """
+    points = np.where(label == target)
+    points = list(points)
+    res_points = []
+    for index in range(len(points[0])):
+        res_points.append([points[0][index], points[1][index]])
+
+    return res_points

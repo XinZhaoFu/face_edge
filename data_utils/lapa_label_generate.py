@@ -3,7 +3,8 @@ import cv2
 import numpy as np
 from glob import glob
 from tqdm import tqdm
-from data_utils.label_generate import get_contour_pupil_label, get_nose_label
+import datetime
+from label_generate import get_contour_pupil_label, get_nose_label
 
 """
 label	class
@@ -33,10 +34,7 @@ def clean_ori_nose(label):
     return label
 
 
-def get_label(label_file_path, save_label_path, contour_point_file_path, nose_point_file_path, img_rows, img_cols):
-    label_name = label_file_path.split('/')[-1]
-
-    label = cv2.imread(label_file_path, 0)
+def get_label(label, contour_point_file_path, nose_point_file_path, img_rows, img_cols):
     label = clean_ori_nose(label)
     label = get_contour_pupil_label(label=label,
                                     contour_point_file_path=contour_point_file_path,
@@ -49,25 +47,39 @@ def get_label(label_file_path, save_label_path, contour_point_file_path, nose_po
                            nose_point_file_path=nose_point_file_path,
                            draw_type=0)
 
-    cv2.imwrite(save_label_path + label_name, label)
+    return label
 
 
 def main():
-    img_path = ''
+    img_path = '../data/lapa_ori_img/'
     label_path = '../data/lapa_ori_label/'
     save_label_path = '../data/lapa_edge/'
-    contour_point_file_path = ''
-    nose_point_file_path = ''
+    contour_point_file_path = '../data/lapa_eye_contour/'
+    nose_point_file_path = '../data/lapa_106points/'
 
     img_file_list = glob(img_path + '*.jpg')
     label_file_list = glob(label_path + '*.png')
     assert len(img_file_list) == len(label_file_list)
+    img_file_list.sort()
+    label_file_list.sort()
 
     for index in tqdm(range(len(img_file_list))):
         label_file_path = label_file_list[index]
         img_file_path = img_file_list[index]
-        get_label(label_file_path, save_label_path, contour_point_file_path, nose_point_file_path, img_rows, img_cols)
+
+        img = cv2.imread(img_file_path)
+        label = cv2.imread(label_file_path, 0)
+        img_rows, img_cols, _ = img.shape
+        label_name = (label_file_path.split('/')[-1]).split('.')[0]
+        cur_contour_point_file_path = contour_point_file_path + label_name + '.txt'
+        cur_nose_point_file_path = nose_point_file_path + label_name + '.txt'
+
+        label = get_label(label, cur_contour_point_file_path, cur_nose_point_file_path, img_rows, img_cols)
+        cv2.imwrite(save_label_path + label_name + '.png', label)
 
 
 if __name__ == '__main__':
+    start_time = datetime.datetime.now()
     main()
+    end_time = datetime.datetime.now()
+    print('time:\t' + str(end_time - start_time).split('.')[0])

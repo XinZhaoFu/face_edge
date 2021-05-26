@@ -8,7 +8,7 @@ from data_utils.dataloader import Data_Loader_File
 import matplotlib.pyplot as plt
 import pandas as pd
 import setproctitle
-from loss.loss import focal_loss, dice_loss
+from loss.loss import binary_focal_loss, dice_loss
 
 
 gpus = tf.config.list_physical_devices('GPU')
@@ -76,7 +76,7 @@ class train:
                  learning_rate=0,
                  train_file_path='./data/train/',
                  val_file_path='./data/val/',
-                 checkpoint_save_path='./checkpoint/detail_con_unet_face_edge.ckpt'):
+                 checkpoint_save_path='./checkpoint/detail_con_unet_face_edge_focal.ckpt'):
         self.load_weights = load_weights
         self.batch_size = batch_size
         self.epochs = epochs
@@ -104,7 +104,12 @@ class train:
         :return:
         """
         with self.strategy.scope():
-            model = UNet(filters=32, num_class=1, semantic_num_cbr=1, detail_num_cbr=4, end_activation='sigmoid')
+            model = UNet(semantic_filters=16,
+                         detail_filters=32,
+                         num_class=1,
+                         semantic_num_cbr=1,
+                         detail_num_cbr=6,
+                         end_activation='sigmoid')
 
             if self.learning_rate > 0:
                 print('使用sgd,其值为：\t' + str(self.learning_rate))
@@ -117,8 +122,8 @@ class train:
                 print('使用adam')
                 model.compile(
                     optimizer='Adam',
-                    loss=dice_loss(),
-                    metrics=['accuracy']
+                    loss=binary_focal_loss(),
+                    metrics=[tf.keras.metrics.Precision(), tf.keras.metrics.Recall()]
                 )
 
             if os.path.exists(self.checkpoint_save_path + '.index') and self.load_weights:
@@ -156,7 +161,7 @@ def plot_learning_curves(history, plt_name):
 
 
 def train_init():
-    ex_info = 'celeb_label'
+    ex_info = '_focal_loss'
     start_time = datetime.datetime.now()
 
     tran_tab = str.maketrans('- :.', '____')

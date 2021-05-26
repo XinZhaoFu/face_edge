@@ -95,15 +95,15 @@ def recreate_dir(folder_name):
         create_dir(folder_name)
 
 
-def check_img_label_list(img_file_list, label_file_list):
+def check_img_label_list(img_file_path_list, label_file_path_list):
     """
     校验文件是否对应
 
-    :param img_file_list:
-    :param label_file_list:
+    :param img_file_path_list:
+    :param label_file_path_list:
     :return:
     """
-    for img_path, label_path in zip(img_file_list, label_file_list):
+    for img_path, label_path in zip(img_file_path_list, label_file_path_list):
         img_name = (img_path.split('/')[-1]).split('.')[0]
         label_name = (label_path.split('/')[-1]).split('.')[0]
 

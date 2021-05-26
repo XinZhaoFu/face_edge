@@ -45,31 +45,32 @@ class Up_CBR_Block(Model):
 
 
 class UNet(Model):
-    def __init__(self, filters=32, num_class=2, semantic_num_cbr=1, detail_num_cbr=4, end_activation='softmax'):
+    def __init__(self, semantic_filters=32, detail_filters=32, num_class=2, semantic_num_cbr=1, detail_num_cbr=4, end_activation='softmax'):
         super(UNet, self).__init__()
-        self.filters = filters
+        self.semantic_filters = semantic_filters
+        self.detail_filters = detail_filters
         self.num_class = num_class
         self.semantic_num_cbr = semantic_num_cbr
         self.detail_num_cbr = detail_num_cbr
         self.end_activation = end_activation
 
-        self.cbr_block1 = CBR_Block(filters=self.filters, num_cbr=self.semantic_num_cbr, block_name='down1')
-        self.cbr_block2 = CBR_Block(filters=self.filters, num_cbr=self.semantic_num_cbr, block_name='down2')
-        self.cbr_block3 = CBR_Block(filters=self.filters, num_cbr=self.semantic_num_cbr, block_name='down3')
-        self.cbr_block4 = CBR_Block(filters=self.filters, num_cbr=self.semantic_num_cbr, block_name='down4')
-        self.cbr_block5 = CBR_Block(filters=self.filters, num_cbr=self.semantic_num_cbr, block_name='down5')
-        self.cbr_block6 = CBR_Block(filters=self.filters, num_cbr=self.semantic_num_cbr, block_name='down6')
-        self.cbr_block7 = CBR_Block(filters=self.filters, num_cbr=self.semantic_num_cbr, block_name='down7')
+        self.cbr_block1 = CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='down1')
+        self.cbr_block2 = CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='down2')
+        self.cbr_block3 = CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='down3')
+        self.cbr_block4 = CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='down4')
+        self.cbr_block5 = CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='down5')
+        self.cbr_block6 = CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='down6')
+        self.cbr_block7 = CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='down7')
 
-        self.cbr_block_up7 = Up_CBR_Block(filters=self.filters, num_cbr=self.semantic_num_cbr, block_name='up7')
-        self.cbr_block_up6 = Up_CBR_Block(filters=self.filters, num_cbr=self.semantic_num_cbr, block_name='up6')
-        self.cbr_block_up5 = Up_CBR_Block(filters=self.filters, num_cbr=self.semantic_num_cbr, block_name='up5')
-        self.cbr_block_up4 = Up_CBR_Block(filters=self.filters, num_cbr=self.semantic_num_cbr, block_name='up4')
-        self.cbr_block_up3 = Up_CBR_Block(filters=self.filters, num_cbr=self.semantic_num_cbr, block_name='up3')
-        self.cbr_block_up2 = Up_CBR_Block(filters=self.filters, num_cbr=self.semantic_num_cbr, block_name='up2')
-        self.cbr_block_up1 = CBR_Block(filters=self.filters, num_cbr=self.semantic_num_cbr, block_name='up1')
+        self.cbr_block_up7 = Up_CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='up7')
+        self.cbr_block_up6 = Up_CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='up6')
+        self.cbr_block_up5 = Up_CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='up5')
+        self.cbr_block_up4 = Up_CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='up4')
+        self.cbr_block_up3 = Up_CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='up3')
+        self.cbr_block_up2 = Up_CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='up2')
+        self.cbr_block_up1 = CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='up1')
 
-        self.cbr_block_detail = CBR_Block(filters=self.filters, num_cbr=self.detail_num_cbr, block_name='detail')
+        self.cbr_block_detail = CBR_Block(filters=self.detail_filters, num_cbr=self.detail_num_cbr, block_name='detail')
 
         self.con_end = Con_Bn_Act(filters=self.num_class, activation=self.end_activation)
 

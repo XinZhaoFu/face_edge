@@ -7,7 +7,7 @@ import tensorflow as tf
 import numpy as np
 import datetime
 from tqdm import tqdm
-from loss.loss import dice_loss
+from loss.loss import dice_loss, binary_focal_loss
 
 
 np.set_printoptions(threshold=np.inf)
@@ -32,7 +32,7 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path):
     # model = BisenetV2(detail_filters=32, aggregation_filters=32, final_filters=2)
     model = UNet(filters=32, num_class=1, semantic_num_cbr=1, detail_num_cbr=4, end_activation='sigmoid')
     model.compile(optimizer='Adam',
-                  loss=dice_loss(),
+                  loss=binary_focal_loss(),
                   metrics=['accuracy'])
     model.load_weights(checkpoint_save_path)
 
@@ -56,7 +56,7 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path):
 
         predict_img[:, :] = predict_temp[0, :, :, 0] * 255
 
-        # _, predict_img = cv2.threshold(predict_img, 128, 255, cv2.THRESH_BINARY)
+        # _, predict_img = cv2.threshold(predict_img, 50, 255, cv2.THRESH_BINARY)
         cv2.imwrite(predict_save_path + test_img_name, predict_img)
         test_file_path_list.set_description('生成中')
 

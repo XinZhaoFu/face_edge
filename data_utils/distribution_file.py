@@ -3,13 +3,13 @@ from glob import glob
 from utils import shuffle_file, distribution_img_label, recreate_dir, distribution_file
 
 
-def img_label_distribution(ori_img_file_path='../data/lapa_ori_img/',
-                           ori_label_file_path='../data/edge/',
-                           train_img_file_path='../data/train/img/',
-                           train_label_file_path='../data/train/label/',
-                           val_img_file_path='../data/val/img/',
-                           val_label_file_path='../data/val/label/'
-                           ):
+def img_label_distribution(ori_img_file_path,
+                           ori_label_file_path,
+                           train_img_file_path,
+                           train_label_file_path,
+                           val_img_file_path,
+                           val_label_file_path,
+                           is_recreate_dir=False):
     ori_img_file_list = glob(ori_img_file_path + '*.jpg')
     ori_label_file_list = glob(ori_label_file_path + '*.png')
 
@@ -31,13 +31,15 @@ def img_label_distribution(ori_img_file_path='../data/lapa_ori_img/',
     distribution_img_label(distribution_img_file_list=ori_img_file_list[:train_file_num],
                            distribution_label_file_list=ori_label_file_list[:train_file_num],
                            distribution_img_file_path=train_img_file_path,
-                           distribution_label_file_path=train_label_file_path)
+                           distribution_label_file_path=train_label_file_path,
+                           is_recreate_dir=is_recreate_dir)
 
     print('[info] -- -- --\t val数据分发 \t-- -- --')
     distribution_img_label(distribution_img_file_list=ori_img_file_list[train_file_num:],
                            distribution_label_file_list=ori_label_file_list[train_file_num:],
                            distribution_img_file_path=val_img_file_path,
-                           distribution_label_file_path=val_label_file_path)
+                           distribution_label_file_path=val_label_file_path,
+                           is_recreate_dir=is_recreate_dir)
 
 
 def celeb_label_distribution():
@@ -87,12 +89,13 @@ if __name__ == '__main__':
     #              val_img_file_path='../data/val/img/',
     #              val_label_file_path='../data/val/label/')
 
-    # img_label_distribution(ori_img_file_path='../data/lapa_ori_img/',
-    #                        ori_label_file_path='../data/lapa_nose_label/',
-    #                        train_img_file_path='../data/nose_train/img/',
-    #                        train_label_file_path='../data/nose_train/label/',
-    #                        val_img_file_path='../data/nose_val/img/',
-    #                        val_label_file_path='../data/nose_val/label/')
+    img_label_distribution(ori_img_file_path='../data/celeb_ori_img/',
+                           ori_label_file_path='../data/celeb_edge/',
+                           train_img_file_path='../data/train/img/',
+                           train_label_file_path='../data/train/label/',
+                           val_img_file_path='../data/val/img/',
+                           val_label_file_path='../data/val/label/',
+                           is_recreate_dir=True)
 
     # celeb_label_distribution()
-    celeb_img_edge_distribution()
+    # celeb_img_edge_distribution()
