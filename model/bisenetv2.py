@@ -27,7 +27,7 @@ class BisenetV2(Model):
                                                               final_filters=self.final_filters,
                                                               final_act=self.final_act)
 
-    def call(self, inputs):
+    def call(self, inputs, training=None, mask=None):
         detail_branch = self.detail_branch(inputs)
         semantic_branch = self.semantic_branch(inputs)
         out = self.aggregation([detail_branch, semantic_branch])
@@ -58,7 +58,7 @@ class Detail_Branch(Model):
         self.s3_con_x2 = Con_Bn_Act(filters=self.filters * 2,
                                     name='detail_branch_s3_con_x2')
 
-    def call(self, inputs):
+    def call(self, inputs, training=None, mask=None):
         s1_con_1 = self.s1_con_1(inputs)
         s1_con_2 = self.s1_con_2(s1_con_1)
 
@@ -91,7 +91,7 @@ class Semantic_Branch(Model):
 
         self.s5_CE = Context_Embedding_Block(filters=self.filters*8)
 
-    def call(self, inputs):
+    def call(self, inputs, training=None, mask=None):
         stem = self.stem(inputs)
 
         s3_GE_down_1 = self.s3_GE_down_1(stem)
@@ -132,7 +132,7 @@ class Stem_Block(Model):
         self.concat_con = Con_Bn_Act(filters=self.filters,
                                      name='stem_block_concat_con')
 
-    def call(self, inputs):
+    def call(self, inputs, training=None, mask=None):
         con_1 = self.con_1(inputs)
 
         branch_1_con_1 = self.branch1_con_1(con_1)
@@ -170,7 +170,7 @@ class Context_Embedding_Block(Model):
         self.x8_scbr3 = Sep_Con_Bn_Act(filters=self.filters, name='context_embedding_block_x8_scbr3')
 
 
-    def call(self, inputs):
+    def call(self, inputs, training=None, mask=None):
         gapooling = self.gapooling(inputs)
         con_1x1 = self.con_1x1(gapooling)
         up = self.up(con_1x1)
@@ -227,7 +227,7 @@ class Gather_Expansion_Down_Block(Model):
 
         self.relu = Activation('relu')
 
-    def call(self, inputs):
+    def call(self, inputs, training=None, mask=None):
         con_3x3 = self.con_3x3(inputs)
         dw_con_3x3_1 = self.dw_con_3x3_1(con_3x3)
         dw_con_3x3_2 = self.dw_con_3x3_2(dw_con_3x3_1)
@@ -258,7 +258,7 @@ class Gather_Expansion_Block(Model):
 
         self.relu = Activation('relu')
 
-    def call(self, inputs):
+    def call(self, inputs, training=None, mask=None):
         con_3x3 = self.con_3x3(inputs)
         dw_con_3x3 = self.dw_con_3x3(con_3x3)
         con_1x1 = self.con_1x1(dw_con_3x3)
@@ -312,7 +312,7 @@ class Bilateral_Guided_Aggregation_Block(Model):
                                       activation=self.final_act,
                                       name='aggregation_sum_con_3x3')
 
-    def call(self, inputs):
+    def call(self, inputs, training=None, mask=None):
         detail_branch_remain_1_dw_con_3x3 = self.detail_remain_1_dw_con_3x3(inputs[0])
         detail_branch_remain_2_con_1x1 = self.detail_remain_2_con_1x1(detail_branch_remain_1_dw_con_3x3)
 

@@ -5,7 +5,7 @@ import datetime
 import os
 from tqdm import tqdm
 from glob import glob
-from data_utils.label_generate import draw_contour_pupil
+from data_utils.label_utils import draw_contour_pupil
 
 np.set_printoptions(threshold=np.inf)
 

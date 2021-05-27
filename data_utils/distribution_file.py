@@ -22,10 +22,7 @@ def img_label_distribution(ori_img_file_path,
 
     train_file_num = int(len(ori_img_file_list) * 0.8)
 
-    print('train num:\t' + str(train_file_num) + '\t\tval num:\t' + str(len(ori_img_file_list) - train_file_num))
-
-    recreate_dir(train_img_file_path)
-    recreate_dir(train_label_file_path)
+    print('[info] train num:\t' + str(train_file_num) + '\tval num:\t' + str(len(ori_img_file_list) - train_file_num))
 
     print('[info] -- -- --\t train数据分发 \t-- -- --')
     distribution_img_label(distribution_img_file_list=ori_img_file_list[:train_file_num],

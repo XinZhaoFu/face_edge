@@ -3,6 +3,8 @@ import argparse
 import datetime
 import tensorflow as tf
 import os
+from model.dense_unet import DenseUNet
+from model.densenet import DenseNet
 from model.unet import UNet
 from data_utils.dataloader import Data_Loader_File
 import matplotlib.pyplot as plt
@@ -76,7 +78,8 @@ class train:
                  learning_rate=0,
                  train_file_path='./data/train/',
                  val_file_path='./data/val/',
-                 checkpoint_save_path='./checkpoint/detail_con_unet_face_edge_focal.ckpt'):
+                 ex_info='info',
+                 checkpoint_save_path='./checkpoint/'):
         self.load_weights = load_weights
         self.batch_size = batch_size
         self.epochs = epochs
@@ -86,10 +89,10 @@ class train:
         self.erase_rate = erase_rate
         self.augmentation_rate = augmentation_rate
         self.learning_rate = learning_rate
-        self.checkpoint_save_path = checkpoint_save_path
+        self.checkpoint_save_path = checkpoint_save_path + ex_info + '.ckpt'
 
         self.strategy = tf.distribute.MirroredStrategy()
-        print('目前使用gpu数量为: {}'.format(self.strategy.num_replicas_in_sync))
+        print('[INFO] 目前使用gpu数量为: {}'.format(self.strategy.num_replicas_in_sync))
 
         data_loader = Data_Loader_File(data_augmentation=self.data_augmentation,
                                        batch_size=self.batch_size,
@@ -104,26 +107,33 @@ class train:
         :return:
         """
         with self.strategy.scope():
-            model = UNet(semantic_filters=16,
-                         detail_filters=32,
-                         num_class=1,
-                         semantic_num_cbr=1,
-                         detail_num_cbr=6,
-                         end_activation='sigmoid')
+            # model = DenseUNet(semantic_filters=16,
+            #                   detail_filters=32,
+            #                   num_class=1,
+            #                   semantic_num_cbr=1,
+            #                   detail_num_cbr=2,
+            #                   end_activation='sigmoid')
+            model = DenseNet(filters=64, num_class=1, activation='sigmoid')
+            # model = UNet(semantic_filters=16,
+            #              detail_filters=32,
+            #              num_class=1,
+            #              semantic_num_cbr=1,
+            #              detail_num_cbr=6,
+            #              end_activation='sigmoid')
 
             if self.learning_rate > 0:
-                print('使用sgd,其值为：\t' + str(self.learning_rate))
+                print('[INFO] 使用sgd,其值为：\t' + str(self.learning_rate))
                 model.compile(
                     optimizer=tf.keras.optimizers.SGD(learning_rate=self.learning_rate),
                     loss=tf.keras.losses.CategoricalCrossentropy(),
                     metrics=['accuracy']
                 )
             else:
-                print('使用adam')
+                print('[INFO] 使用adam')
                 model.compile(
                     optimizer='Adam',
                     loss=binary_focal_loss(),
-                    metrics=[tf.keras.metrics.Precision(), tf.keras.metrics.Recall()]
+                    metrics=[tf.keras.metrics.Precision()]
                 )
 
             if os.path.exists(self.checkpoint_save_path + '.index') and self.load_weights:
@@ -161,11 +171,11 @@ def plot_learning_curves(history, plt_name):
 
 
 def train_init():
-    ex_info = '_focal_loss'
+    ex_info = 'dense_unet_face_edge_focal'
     start_time = datetime.datetime.now()
 
     tran_tab = str.maketrans('- :.', '____')
-    plt_name = str(start_time).translate(tran_tab) + ex_info
+    plt_name = ex_info + str(start_time).translate(tran_tab)
 
     args = parseArgs()
     seg = train(load_weights=args.load_weights,
@@ -174,7 +184,8 @@ def train_init():
                 load_train_file_number=args.load_train_file_number,
                 load_val_file_number=args.load_val_file_number,
                 data_augmentation=args.data_augmentation,
-                learning_rate=args.learning_rate)
+                learning_rate=args.learning_rate,
+                ex_info=ex_info)
     history = seg.model_train()
     plot_learning_curves(history, plt_name)
 

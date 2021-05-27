@@ -1,6 +1,6 @@
 from tensorflow.keras.layers import Conv2D, BatchNormalization, Activation, SeparableConv2D, \
     DepthwiseConv2D, MaxPooling2D, UpSampling2D, concatenate
-from tensorflow.keras import Model, regularizers
+from tensorflow.keras import Model, regularizers, Sequential
 
 
 class Con_Bn_Act(Model):
@@ -42,7 +42,7 @@ class Con_Bn_Act(Model):
         if self.activation is not None:
             self.act = Activation(self.activation)
 
-    def call(self, inputs):
+    def call(self, inputs, training=None, mask=None):
         con = self.con(inputs)
         bn = self.bn(con)
         if self.kernel_size != (1, 1) and self.activation is not None:
@@ -77,7 +77,7 @@ class Sep_Con_Bn_Act(Model):
         self.bn = BatchNormalization()
         self.act = Activation(self.activation)
 
-    def call(self, inputs):
+    def call(self, inputs, training=None, mask=None):
         con = self.con(inputs)
         bn = self.bn(con)
         if self.kernel_size != (1, 1):
@@ -117,7 +117,7 @@ class DW_Con_Bn_Act(Model):
         if self.activation is not None:
             self.act = Activation(self.activation)
 
-    def call(self, inputs):
+    def call(self, inputs, training=None, mask=None):
         con_1x1 = self.con_1x1(inputs)
 
         con = self.dw_con(con_1x1)
@@ -154,7 +154,7 @@ class Aspp(Model):
         self.concat_2 = Con_Bn_Act(filters=self.filters, kernel_size=(1, 1), padding='same',
                                    name='aspp_concate_con1x1')
 
-    def call(self, inputs):
+    def call(self, inputs, training=None, mask=None):
         con1x1 = self.con1x1(inputs)
 
         dila_con6x6 = self.dila_con1(inputs)
@@ -169,3 +169,50 @@ class Aspp(Model):
         out = self.concat_2(concat_1)
 
         return out
+
+
+class CBR_Block(Model):
+    def __init__(self, filters, num_cbr=1, block_name=None):
+        super(CBR_Block, self).__init__()
+        self.filters = filters
+        self.num_cbr = num_cbr
+        self.block_name = None
+        if block_name is not None and type(block_name) == str:
+            self.block_name = block_name
+
+        self.con_blocks = Sequential()
+        for index in range(self.num_cbr):
+            if self.block_name is not None:
+                block = Con_Bn_Act(filters=self.filters, name=self.block_name + '_Con_Block_' + str(index+1))
+            else:
+                block = Con_Bn_Act(filters=self.filters, name='Con_Block_' + str(index + 1))
+            self.con_blocks.add(block)
+
+    def call(self, inputs, training=None, mask=None):
+        out = self.con_blocks(inputs)
+
+        return out
+
+
+class SCBR_Block(Model):
+    def __init__(self, filters, num_scbr=1, block_name=None):
+        super(SCBR_Block, self).__init__()
+        self.filters = filters
+        self.num_scbr = num_scbr
+        self.block_name = None
+        if block_name is not None and type(block_name) == str:
+            self.block_name = block_name
+
+        self.con_blocks = Sequential()
+        for index in range(self.num_scbr):
+            if self.block_name is not None:
+                block = Sep_Con_Bn_Act(filters=self.filters, name=self.block_name + '_Con_Block_' + str(index+1))
+            else:
+                block = Sep_Con_Bn_Act(filters=self.filters, name='Con_Block_' + str(index + 1))
+            self.con_blocks.add(block)
+
+    def call(self, inputs, training=None, mask=None):
+        out = self.con_blocks(inputs)
+
+        return out
+

@@ -23,7 +23,7 @@ class Deeplab_v3_plus(Model):
         self.out_con = Con_Bn_Act(filters=self.final_filters, kernel_size=(3, 3),
                                   activation=self.final_activation, name='out')
 
-    def call(self, inputs):
+    def call(self, inputs, training=None, mask=None):
         backbone_low2, backbone_out = self.backbone(inputs)
         aspp = self.aspp(backbone_out)
         aspp_up = self.aspp_up(aspp)
@@ -75,7 +75,7 @@ class Xception_BackBone(Model):
         self.exit_sep_con2_2 = Sep_Con_Bn_Act(filters=128, name='exit_sep_con2_2')
         self.exit_sep_con2_3 = Sep_Con_Bn_Act(filters=128, name='exit_sep_con2_3')
 
-    def call(self, inputs):
+    def call(self, inputs, training=None, mask=None):
         #   entry flow
         con1_1 = self.entry_con1_1(inputs)
         con1_2 = self.entry_con1_2(con1_1)

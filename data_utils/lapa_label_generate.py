@@ -4,7 +4,7 @@ import numpy as np
 from glob import glob
 from tqdm import tqdm
 import datetime
-from label_generate import get_contour_pupil_label, get_nose_label
+from label_utils import get_contour_pupil_label, get_nose_label, get_target_point
 
 """
 label	class
@@ -25,11 +25,9 @@ np.set_printoptions(threshold=np.inf)
 
 
 def clean_ori_nose(label):
-    label_rows, label_cols = label.shape
-    for row in range(label_rows):
-        for col in range(label_cols):
-            if label[row][col] == 6:
-                label[row][col] = 1
+    points = get_target_point(label, 6)
+    for point in points:
+        label[point[0]][point[1]] = 6
 
     return label
 

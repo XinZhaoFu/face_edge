@@ -21,7 +21,7 @@ def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=Fa
     label_path = file_path + 'label/'
 
     if data_augmentation:
-        print('调用数据增强后的文件')
+        print('[INFO] 调用数据增强后的文件')
         img_path = file_path + 'aug_img/'
         label_path = file_path + 'aug_label/'
 
@@ -40,13 +40,13 @@ def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=Fa
 
     # 截取部分文件
     if file_number > 0:
-        print('截取部分文件 其数量为：\t' + str(file_number))
+        print('[INFO] 截取部分文件 其数量为：\t' + str(file_number))
         if file_number > len(img_file_path_list):
             file_number = len(img_file_path_list)
         img_file_path_list = img_file_path_list[:file_number]
         label_file_path_list = label_file_path_list[:file_number]
     else:
-        print('不截取文件 其数量为：\t' + str(len(img_file_path_list)))
+        print('[INFO] 不截取文件 其数量为：\t' + str(len(img_file_path_list)))
 
     check_img_label_list(img_file_path_list, label_file_path_list)
 

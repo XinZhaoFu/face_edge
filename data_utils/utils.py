@@ -79,6 +79,7 @@ def create_dir(folder_name):
     """
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
+        print('[INFO] 新建文件夹：' + folder_name)
 
 
 def recreate_dir(folder_name):
@@ -93,6 +94,7 @@ def recreate_dir(folder_name):
     else:
         shutil.rmtree(folder_name)
         create_dir(folder_name)
+    print('[INFO] 重建文件夹：' + folder_name)
 
 
 def check_img_label_list(img_file_path_list, label_file_path_list):
@@ -108,4 +110,4 @@ def check_img_label_list(img_file_path_list, label_file_path_list):
         label_name = (label_path.split('/')[-1]).split('.')[0]
 
         assert img_name == label_name
-    print('文件对应检查通过')
+    print('[INFO] 文件对应检查通过')

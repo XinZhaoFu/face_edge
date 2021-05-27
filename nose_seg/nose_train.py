@@ -3,7 +3,7 @@ import argparse
 import datetime
 import tensorflow as tf
 import os
-from model.unet import UNet
+from model.dense_unet import DenseUNet
 from data_utils.dataloader import Data_Loader_File
 import setproctitle
 
@@ -99,7 +99,7 @@ class train:
         :return:
         """
         with self.strategy.scope():
-            model = UNet(filters=32, num_class=2, semantic_num_cbr=1, detail_num_cbr=4)
+            model = DenseUNet(filters=32, num_class=2, semantic_num_cbr=1, detail_num_cbr=4)
 
             if self.learning_rate > 0:
                 print('使用sgd,其值为：\t' + str(self.learning_rate))

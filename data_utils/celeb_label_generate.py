@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import datetime
 from tqdm import tqdm
-from label_generate import get_contour_pupil_label, get_nose_label
+from label_utils import get_contour_pupil_label, get_nose_label
 
 """
 label class         name

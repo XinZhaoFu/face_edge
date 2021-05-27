@@ -1,8 +1,10 @@
 # coding=utf-8
 import glob
 import cv2
-from model.unet import UNet
+from model.dense_unet import DenseUNet
+from model.densenet import DenseNet
 from model.bisenetv2 import BisenetV2
+from model.unet import UNet
 import tensorflow as tf
 import numpy as np
 import datetime
@@ -18,10 +20,11 @@ if len(gpus) > 0:
     tf.config.experimental.set_memory_growth(gpus[0], True)
 
 
-def predict(checkpoint_save_path, test_file_path, predict_save_path):
+def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, img_name_comple):
     """
     这里batchsize形同为1  需要一批多个的话得改一下
 
+    :param ex_info:
     :param checkpoint_save_path:
     :param test_file_path:
     :param predict_save_path:
@@ -30,7 +33,19 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path):
     print('[info]模型加载 图片加载')
     # 加载模型
     # model = BisenetV2(detail_filters=32, aggregation_filters=32, final_filters=2)
-    model = UNet(filters=32, num_class=1, semantic_num_cbr=1, detail_num_cbr=4, end_activation='sigmoid')
+    # model = UNet(semantic_filters=16,
+    #              detail_filters=32,
+    #              num_class=1,
+    #              semantic_num_cbr=1,
+    #              detail_num_cbr=6,
+    #              end_activation='sigmoid')
+    # model = DenseNet(filters=32, num_class=1, activation='sigmoid')
+    model = UNet(semantic_filters=16,
+                 detail_filters=32,
+                 num_class=1,
+                 semantic_num_cbr=1,
+                 detail_num_cbr=6,
+                 end_activation='sigmoid')
     model.compile(optimizer='Adam',
                   loss=binary_focal_loss(),
                   metrics=['accuracy'])
@@ -48,7 +63,7 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path):
         test_img_np[0, :, :, :] = test_img[:, :, :]
         test_img_name = (test_file.split('/')[-1]).split('.')[0]
         # test_img_name = "{:0>5d}".format(int(test_img_name)) + '_nose.png'
-        test_img_name = test_img_name + '_dice_test.png'
+        test_img_name = img_name_comple + '_' + ex_info + '_' + test_img_name + '.png'
 
         predict_temp = model.predict(test_img_np)
 
@@ -62,16 +77,19 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path):
 
 
 def main():
-    # checkpoint_save_path = './checkpoint/face_edge.ckpt'
-    checkpoint_save_path = './checkpoint/detail_con_unet_face_edge.ckpt'
-    # checkpoint_save_path = './checkpoint/bisev2_3x2_face_edge.ckpt.index'
+    ex_info = 'detail_con_unet_face_edge_focal'
+
+    checkpoint_save_path = './checkpoint/' + ex_info + '.ckpt'
 
     test_file_path = './data/test/'
     predict_save_path = './data/predict/'
 
     start_time = datetime.datetime.now()
 
-    predict(checkpoint_save_path, test_file_path, predict_save_path)
+    tran_tab = str.maketrans('- :.', '____')
+    img_name_comple = str(start_time).translate(tran_tab)
+
+    predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, img_name_comple)
 
     end_time = datetime.datetime.now()
     print('time:\t' + str(end_time - start_time).split('.')[0])
