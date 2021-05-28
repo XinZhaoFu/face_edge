@@ -10,7 +10,8 @@ from data_utils.dataloader import Data_Loader_File
 import matplotlib.pyplot as plt
 import pandas as pd
 import setproctitle
-from loss.loss import binary_focal_loss, dice_loss
+import numpy as np
+from loss.loss import binary_focal_loss, dice_loss, mix_dice_focal_loss, binary_crossentropy_weight
 
 
 gpus = tf.config.list_physical_devices('GPU')
@@ -100,6 +101,7 @@ class train:
                                        val_file_path=val_file_path)
         self.train_datasets = data_loader.load_train_data(load_file_number=self.load_train_file_number)
         self.val_datasets = data_loader.load_val_data(load_file_number=self.load_val_file_number)
+        self.class_weight = np.array([0.5073703301521681, 34.419783081421244])
 
     def model_train(self):
         """
@@ -107,13 +109,13 @@ class train:
         :return:
         """
         with self.strategy.scope():
-            # model = DenseUNet(semantic_filters=16,
-            #                   detail_filters=32,
-            #                   num_class=1,
-            #                   semantic_num_cbr=1,
-            #                   detail_num_cbr=2,
-            #                   end_activation='sigmoid')
-            model = DenseNet(filters=64, num_class=1, activation='sigmoid')
+            model = DenseUNet(semantic_filters=16,
+                              detail_filters=32,
+                              num_class=1,
+                              semantic_num_cbr=1,
+                              detail_num_cbr=3,
+                              end_activation='sigmoid')
+            # model = DenseNet(filters=64, num_class=1, activation='sigmoid')
             # model = UNet(semantic_filters=16,
             #              detail_filters=32,
             #              num_class=1,
@@ -122,19 +124,17 @@ class train:
             #              end_activation='sigmoid')
 
             if self.learning_rate > 0:
+                optimizer = tf.keras.optimizers.SGD(learning_rate=self.learning_rate)
                 print('[INFO] 使用sgd,其值为：\t' + str(self.learning_rate))
-                model.compile(
-                    optimizer=tf.keras.optimizers.SGD(learning_rate=self.learning_rate),
-                    loss=tf.keras.losses.CategoricalCrossentropy(),
-                    metrics=['accuracy']
-                )
             else:
+                optimizer = 'Adam'
                 print('[INFO] 使用adam')
-                model.compile(
-                    optimizer='Adam',
-                    loss=binary_focal_loss(),
-                    metrics=[tf.keras.metrics.Precision()]
-                )
+
+            model.compile(
+                optimizer=optimizer,
+                loss=mix_dice_focal_loss(),
+                metrics=[tf.keras.metrics.Precision()]
+            )
 
             if os.path.exists(self.checkpoint_save_path + '.index') and self.load_weights:
                 print("[INFO] -------------------------------------------------")
@@ -144,7 +144,7 @@ class train:
 
             checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
                 filepath=self.checkpoint_save_path,
-                monitor='val_loss',
+                monitor='val_precision',
                 save_weights_only=True,
                 save_best_only=True,
                 mode='auto',
@@ -156,7 +156,8 @@ class train:
             verbose=1,
             validation_data=self.val_datasets,
             validation_freq=1,
-            callbacks=[checkpoint_callback])
+            callbacks=[checkpoint_callback]
+        )
 
         model.summary()
 
@@ -171,7 +172,7 @@ def plot_learning_curves(history, plt_name):
 
 
 def train_init():
-    ex_info = 'dense_unet_face_edge_focal'
+    ex_info = 'dense_unet_df32sf32dn3_mix_loss'
     start_time = datetime.datetime.now()
 
     tran_tab = str.maketrans('- :.', '____')

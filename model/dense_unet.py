@@ -42,11 +42,11 @@ class DenseUNet(Model):
         self.cbr_block3 = CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='down3')
         self.cbr_block4 = CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='down4')
         self.cbr_block5 = CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='down5')
-        self.cbr_block6 = CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='down6')
-        self.cbr_block7 = CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='down7')
+        # self.cbr_block6 = CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='down6')
+        # self.cbr_block7 = CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='down7')
 
-        self.cbr_block_up7 = Up_CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='up7')
-        self.cbr_block_up6 = Up_CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='up6')
+        # self.cbr_block_up7 = Up_CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='up7')
+        # self.cbr_block_up6 = Up_CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='up6')
         self.cbr_block_up5 = Up_CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='up5')
         self.cbr_block_up4 = Up_CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='up4')
         self.cbr_block_up3 = Up_CBR_Block(filters=self.semantic_filters, num_cbr=self.semantic_num_cbr, block_name='up3')
@@ -59,6 +59,7 @@ class DenseUNet(Model):
         self.cbr_block_detail4 = CBR_Block(filters=self.detail_filters, num_cbr=self.detail_num_cbr, block_name='detail')
         self.cbr_block_detail5 = CBR_Block(filters=self.detail_filters, num_cbr=self.detail_num_cbr, block_name='detail')
 
+        self.cbr_block_concat = CBR_Block(filters=self.detail_filters, num_cbr=self.detail_num_cbr, block_name='concat')
         self.con_end = Con_Bn_Act(filters=self.num_class, activation=self.end_activation)
 
         self.pool = MaxPooling2D(padding='same')
@@ -78,19 +79,20 @@ class DenseUNet(Model):
         pool5 = self.pool(con4)
         con5 = self.cbr_block5(pool5)
 
-        pool6 = self.pool(con5)
-        con6 = self.cbr_block6(pool6)
+        # pool6 = self.pool(con5)
+        # con6 = self.cbr_block6(pool6)
+        #
+        # pool7 = self.pool(con6)
+        # con7 = self.cbr_block7(pool7)
+        #
+        # up7 = self.cbr_block_up7(con7)
+        #
+        # merge6 = concatenate([up7, con6], axis=3)
+        # up6 = self.cbr_block_up6(merge6)
 
-        pool7 = self.pool(con6)
-        con7 = self.cbr_block7(pool7)
-
-        up7 = self.cbr_block_up7(con7)
-
-        merge6 = concatenate([up7, con6], axis=3)
-        up6 = self.cbr_block_up6(merge6)
-
-        merge5 = concatenate([up6, con5], axis=3)
-        up5 = self.cbr_block_up5(merge5)
+        # merge5 = concatenate([up6, con5], axis=3)
+        # up5 = self.cbr_block_up5(merge5)
+        up5 = self.cbr_block_up5(con5)
 
         merge4 = concatenate([up5, con4], axis=3)
         up4 = self.cbr_block_up4(merge4)
@@ -117,8 +119,10 @@ class DenseUNet(Model):
         detail_merge4 = concatenate([detail4, detail3], axis=3)
 
         detail5 = self.cbr_block_detail5(detail_merge4)
-        detail_merge5 = concatenate([detail5, up1, con1], axis=3)
+        detail_merge5 = concatenate([detail5, up1], axis=3)
 
-        out = self.con_end(detail_merge5)
+        concat = self.cbr_block_concat(detail_merge5)
+
+        out = self.con_end(concat)
 
         return out

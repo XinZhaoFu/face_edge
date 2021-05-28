@@ -9,7 +9,7 @@ import tensorflow as tf
 import numpy as np
 import datetime
 from tqdm import tqdm
-from loss.loss import dice_loss, binary_focal_loss
+from loss.loss import dice_loss, binary_focal_loss, mix_dice_focal_loss
 
 
 np.set_printoptions(threshold=np.inf)
@@ -33,21 +33,21 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
     print('[info]模型加载 图片加载')
     # 加载模型
     # model = BisenetV2(detail_filters=32, aggregation_filters=32, final_filters=2)
+    model = DenseUNet(semantic_filters=16,
+                      detail_filters=32,
+                      num_class=1,
+                      semantic_num_cbr=1,
+                      detail_num_cbr=2,
+                      end_activation='sigmoid')
+    # model = DenseNet(filters=32, num_class=1, activation='sigmoid')
     # model = UNet(semantic_filters=16,
     #              detail_filters=32,
     #              num_class=1,
     #              semantic_num_cbr=1,
     #              detail_num_cbr=6,
     #              end_activation='sigmoid')
-    # model = DenseNet(filters=32, num_class=1, activation='sigmoid')
-    model = UNet(semantic_filters=16,
-                 detail_filters=32,
-                 num_class=1,
-                 semantic_num_cbr=1,
-                 detail_num_cbr=6,
-                 end_activation='sigmoid')
     model.compile(optimizer='Adam',
-                  loss=binary_focal_loss(),
+                  loss=mix_dice_focal_loss(),
                   metrics=['accuracy'])
     model.load_weights(checkpoint_save_path)
 
@@ -77,7 +77,8 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
 
 
 def main():
-    ex_info = 'detail_con_unet_face_edge_focal'
+    ex_info = 'dense_unet_df32sf16_mix_loss'
+    # ex_info = 'detail_con_unet_face_edge_focal'
 
     checkpoint_save_path = './checkpoint/' + ex_info + '.ckpt'
 
