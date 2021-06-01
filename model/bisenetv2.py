@@ -8,11 +8,11 @@ class BisenetV2(Model):
     def __init__(self, detail_filters=64,
                  semantic_filters=None,
                  aggregation_filters=128,
-                 final_filters=2,
+                 num_class=2,
                  final_act='softmax'):
         super(BisenetV2, self).__init__()
         self.final_act = final_act
-        self.final_filters = final_filters
+        self.num_class = num_class
         if semantic_filters is None:
             self.semantic_filters = [16, 32, 64, 128]
         else:
@@ -24,7 +24,7 @@ class BisenetV2(Model):
         self.detail_branch = Detail_Branch(filters=self.detail_filters)
         self.semantic_branch = Semantic_Branch(filters=16)
         self.aggregation = Bilateral_Guided_Aggregation_Block(filters=self.aggregation_filters,
-                                                              final_filters=self.final_filters,
+                                                              num_class=self.num_class,
                                                               final_act=self.final_act)
 
     def call(self, inputs, training=None, mask=None):
@@ -270,10 +270,10 @@ class Gather_Expansion_Block(Model):
 
 
 class Bilateral_Guided_Aggregation_Block(Model):
-    def __init__(self, filters=128, final_filters=151, final_act='softmax'):
+    def __init__(self, filters=128, num_class=151, final_act='softmax'):
         super(Bilateral_Guided_Aggregation_Block, self).__init__()
         self.final_act = final_act
-        self.final_filters = final_filters
+        self.num_class = num_class
         self.filters = filters
 
         self.detail_remain_1_dw_con_3x3 = DW_Con_Bn_Act(filters=self.filters,
@@ -308,7 +308,7 @@ class Bilateral_Guided_Aggregation_Block(Model):
 
         self.semantic_up = UpSampling2D(size=(4, 4))
 
-        self.sum_con_3x3 = Con_Bn_Act(filters=self.final_filters,
+        self.sum_con_3x3 = Con_Bn_Act(filters=self.num_class,
                                       activation=self.final_act,
                                       name='aggregation_sum_con_3x3')
 

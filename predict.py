@@ -32,13 +32,13 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
     """
     print('[info]模型加载 图片加载')
     # 加载模型
-    # model = BisenetV2(detail_filters=32, aggregation_filters=32, final_filters=2)
-    model = DenseUNet(semantic_filters=16,
-                      detail_filters=32,
-                      num_class=1,
-                      semantic_num_cbr=1,
-                      detail_num_cbr=2,
-                      end_activation='sigmoid')
+    model = BisenetV2(detail_filters=32, aggregation_filters=32, num_class=1, final_act='sigmoid')
+    # model = DenseUNet(semantic_filters=16,
+    #                   detail_filters=32,
+    #                   num_class=1,
+    #                   semantic_num_cbr=1,
+    #                   detail_num_cbr=2,
+    #                   end_activation='sigmoid')
     # model = DenseNet(filters=32, num_class=1, activation='sigmoid')
     # model = UNet(semantic_filters=16,
     #              detail_filters=32,
@@ -77,8 +77,9 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
 
 
 def main():
-    ex_info = 'dense_unet_df32sf16_mix_loss'
+    # ex_info = 'dense_unet_df32sf16_mix_loss'
     # ex_info = 'detail_con_unet_face_edge_focal'
+    ex_info = 'bisev2_mix_loss'
 
     checkpoint_save_path = './checkpoint/' + ex_info + '.ckpt'
 

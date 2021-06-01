@@ -9,7 +9,7 @@ class Con_Bn_Act(Model):
                  kernel_size=(3, 3),
                  padding='same',
                  strides=1,
-                 activation='relu',
+                 activation=None,
                  dilation_rate=1,
                  name=None,
                  kernel_regularizer=False):
@@ -22,6 +22,9 @@ class Con_Bn_Act(Model):
         self.activation = activation
         self.dilation_rate = dilation_rate
         self.block_name = name
+
+        if activation is None:
+            self.activation = 'relu'
 
         if self.kernel_regularizer:
             self.con_regularizer = regularizers.l2()
@@ -58,7 +61,7 @@ class Sep_Con_Bn_Act(Model):
                  kernel_size=(3, 3),
                  padding='same',
                  strides=1,
-                 activation='relu',
+                 activation=None,
                  name=None):
         super(Sep_Con_Bn_Act, self).__init__()
         self.filters = filters
@@ -66,6 +69,8 @@ class Sep_Con_Bn_Act(Model):
         self.padding = padding
         self.strides = strides
         self.activation = activation
+        if activation is None:
+            self.activation = 'relu'
         self.block_name = name
 
         self.con = SeparableConv2D(filters=self.filters,

@@ -6,6 +6,7 @@ import os
 from model.dense_unet import DenseUNet
 from model.densenet import DenseNet
 from model.unet import UNet
+from model.bisenetv2 import BisenetV2
 from data_utils.dataloader import Data_Loader_File
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -109,12 +110,12 @@ class train:
         :return:
         """
         with self.strategy.scope():
-            model = DenseUNet(semantic_filters=16,
-                              detail_filters=32,
-                              num_class=1,
-                              semantic_num_cbr=1,
-                              detail_num_cbr=3,
-                              end_activation='sigmoid')
+            # model = DenseUNet(semantic_filters=16,
+            #                   detail_filters=32,
+            #                   num_class=1,
+            #                   semantic_num_cbr=1,
+            #                   detail_num_cbr=3,
+            #                   end_activation='sigmoid')
             # model = DenseNet(filters=64, num_class=1, activation='sigmoid')
             # model = UNet(semantic_filters=16,
             #              detail_filters=32,
@@ -122,6 +123,7 @@ class train:
             #              semantic_num_cbr=1,
             #              detail_num_cbr=6,
             #              end_activation='sigmoid')
+            model = BisenetV2(detail_filters=32, aggregation_filters=32, num_class=1, final_act='sigmoid')
 
             if self.learning_rate > 0:
                 optimizer = tf.keras.optimizers.SGD(learning_rate=self.learning_rate)
@@ -132,7 +134,7 @@ class train:
 
             model.compile(
                 optimizer=optimizer,
-                loss=mix_dice_focal_loss(),
+                loss=dice_loss(),
                 metrics=[tf.keras.metrics.Precision()]
             )
 
@@ -144,7 +146,7 @@ class train:
 
             checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
                 filepath=self.checkpoint_save_path,
-                monitor='val_precision',
+                monitor='val_loss',
                 save_weights_only=True,
                 save_best_only=True,
                 mode='auto',
@@ -172,7 +174,9 @@ def plot_learning_curves(history, plt_name):
 
 
 def train_init():
-    ex_info = 'dense_unet_df32sf32dn3_mix_loss'
+    # ex_info = 'dense_unet_df32sf16_mix_loss'
+    # ex_info = 'detail_con_unet_face_edge_focal'
+    ex_info = 'bisev2_mix_loss'
     start_time = datetime.datetime.now()
 
     tran_tab = str.maketrans('- :.', '____')
