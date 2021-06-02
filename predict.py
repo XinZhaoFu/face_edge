@@ -5,6 +5,7 @@ from model.dense_unet import DenseUNet
 from model.densenet import DenseNet
 from model.bisenetv2 import BisenetV2
 from model.unet import UNet
+from model.u2net import U2Net
 import tensorflow as tf
 import numpy as np
 import datetime
@@ -32,7 +33,12 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
     """
     print('[info]模型加载 图片加载')
     # 加载模型
-    model = BisenetV2(detail_filters=32, aggregation_filters=32, num_class=1, final_act='sigmoid')
+    model = U2Net(rsu_middle_filters=16,
+                  rsu_out_filters=32,
+                  num_class=1,
+                  end_activation='sigmoid',
+                  only_output=True)
+    # model = BisenetV2(detail_filters=32, aggregation_filters=32, num_class=1, final_act='sigmoid')
     # model = DenseUNet(semantic_filters=16,
     #                   detail_filters=32,
     #                   num_class=1,
@@ -47,7 +53,7 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
     #              detail_num_cbr=6,
     #              end_activation='sigmoid')
     model.compile(optimizer='Adam',
-                  loss=mix_dice_focal_loss(),
+                  loss=dice_loss(),
                   metrics=['accuracy'])
     model.load_weights(checkpoint_save_path)
 
@@ -79,7 +85,8 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
 def main():
     # ex_info = 'dense_unet_df32sf16_mix_loss'
     # ex_info = 'detail_con_unet_face_edge_focal'
-    ex_info = 'bisev2_mix_loss'
+    # ex_info = 'bisev2_mix_loss'
+    ex_info = 'u2net_mix_loss'
 
     checkpoint_save_path = './checkpoint/' + ex_info + '.ckpt'
 

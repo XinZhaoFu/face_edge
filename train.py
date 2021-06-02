@@ -7,12 +7,13 @@ from model.dense_unet import DenseUNet
 from model.densenet import DenseNet
 from model.unet import UNet
 from model.bisenetv2 import BisenetV2
+from model.u2net import U2Net
 from data_utils.dataloader import Data_Loader_File
 import matplotlib.pyplot as plt
 import pandas as pd
 import setproctitle
 import numpy as np
-from loss.loss import binary_focal_loss, dice_loss, mix_dice_focal_loss, binary_crossentropy_weight
+from loss.loss import binary_focal_loss, dice_loss, mix_dice_focal_loss, binary_crossentropy_weight, u2net_bce_loss
 
 
 gpus = tf.config.list_physical_devices('GPU')
@@ -123,7 +124,12 @@ class train:
             #              semantic_num_cbr=1,
             #              detail_num_cbr=6,
             #              end_activation='sigmoid')
-            model = BisenetV2(detail_filters=32, aggregation_filters=32, num_class=1, final_act='sigmoid')
+            # model = BisenetV2(detail_filters=32, aggregation_filters=32, num_class=1, final_act='sigmoid')
+            model = U2Net(rsu_middle_filters=16,
+                          rsu_out_filters=32,
+                          num_class=1,
+                          end_activation='sigmoid',
+                          only_output=True)
 
             if self.learning_rate > 0:
                 optimizer = tf.keras.optimizers.SGD(learning_rate=self.learning_rate)
@@ -146,7 +152,7 @@ class train:
 
             checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
                 filepath=self.checkpoint_save_path,
-                monitor='val_loss',
+                monitor='loss',
                 save_weights_only=True,
                 save_best_only=True,
                 mode='auto',
@@ -176,7 +182,8 @@ def plot_learning_curves(history, plt_name):
 def train_init():
     # ex_info = 'dense_unet_df32sf16_mix_loss'
     # ex_info = 'detail_con_unet_face_edge_focal'
-    ex_info = 'bisev2_mix_loss'
+    # ex_info = 'bisev2_mix_loss'
+    ex_info = 'u2net_mix_loss'
     start_time = datetime.datetime.now()
 
     tran_tab = str.maketrans('- :.', '____')

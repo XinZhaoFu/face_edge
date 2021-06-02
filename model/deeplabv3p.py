@@ -4,12 +4,11 @@ from model.utils import Con_Bn_Act, Sep_Con_Bn_Act, Aspp
 
 
 class Deeplab_v3_plus(Model):
-    def __init__(self, final_filters, num_middle, input_channel=3, aspp_filters=256,
+    def __init__(self, final_filters, num_middle, aspp_filters=256,
                  final_activation=None):
         super(Deeplab_v3_plus, self).__init__()
         self.final_filters = final_filters
         self.num_middle = num_middle
-        self.input_channel = input_channel
         self.aspp_filters = aspp_filters
         self.backbone_low2_filters = 256
         self.final_activation = final_activation

@@ -1,17 +1,18 @@
-from utils import Con_Bn_Act
+from model.utils import Con_Bn_Act
 from tensorflow.keras import Model
-from unet import Up_CBR_Block
+from model.unet import Up_CBR_Block
 import tensorflow as tf
 from tensorflow.keras.layers import MaxPooling2D, concatenate, add, UpSampling2D
 
 
 class U2Net(Model):
-    def __init__(self, rsu_middle_filters, rsu_out_filters, num_class, end_activation='softmax'):
+    def __init__(self, rsu_middle_filters, rsu_out_filters, num_class, end_activation='softmax', only_output=False):
         super(U2Net, self).__init__()
         self.rsu_middle_filters = rsu_middle_filters
         self.rsu_out_filters = rsu_out_filters
         self.num_class = num_class
         self.end_activation = end_activation
+        self.only_output = only_output
 
         self.pooling = MaxPooling2D(padding='same')
         self.down_rsu1 = RSU7(middle_filters=self.rsu_middle_filters, out_filters=self.rsu_out_filters)
@@ -96,7 +97,10 @@ class U2Net(Model):
         out_concat = concatenate([side1, side2, side3, side4, side5, side6], axis=3)
         out = self.out_cbr(out_concat)
 
-        return tf.stack([out, side1, side2, side3, side4, side5, side6])
+        if self.only_output is False:
+            out = tf.stack([out, side1, side2, side3, side4, side5, side6])
+
+        return out
 
 
 class RSU7(Model):
@@ -315,7 +319,7 @@ class RSU4(Model):
 
         down_cbr3 = self.down_cbr_3(down_pooling2)
 
-        cbr4 = self.cbr_5(down_cbr3)
+        cbr4 = self.cbr_4(down_cbr3)
 
         concat_3 = concatenate([cbr4, down_cbr3], axis=3)
         up_cbr3 = self.up3(concat_3)

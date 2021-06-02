@@ -105,7 +105,12 @@ def binary_crossentropy_weight():
 
 
 def u2net_bce_loss():
-    bce = tf.keras.losses.BinaryCrossentropy()
+    """
+    已弃用
+
+    :return:
+    """
+    bce = tf.keras.losses.binary_crossentropy
 
     def bce_loss_fixed(y_true, y_pred):
         y_pred = tf.expand_dims(y_pred, axis=-1)
@@ -116,6 +121,7 @@ def u2net_bce_loss():
         loss4 = bce(y_true, y_pred[4])
         loss5 = bce(y_true, y_pred[5])
         loss6 = bce(y_true, y_pred[6])
-        return loss0 + loss1 + loss2 + loss3 + loss4 + loss5 + loss6
+        loss = loss0 + loss1 + loss2 + loss3 + loss4 + loss5 + loss6
+        return tf.reduce_sum(loss)
     return bce_loss_fixed
 

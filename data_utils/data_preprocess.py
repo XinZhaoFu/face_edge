@@ -55,7 +55,7 @@ def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=Fa
 
     image_label_ds = image_label_ds.shuffle(buffer_size=batch_size * 4)
     image_label_ds = image_label_ds.batch(batch_size)
-    image_label_ds = image_label_ds.prefetch(buffer_size=autotune)
+    image_label_ds = image_label_ds.prefetch(buffer_size=batch_size * 4)
 
     return image_label_ds
 
