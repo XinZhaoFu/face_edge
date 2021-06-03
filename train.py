@@ -167,7 +167,9 @@ class train:
             callbacks=[checkpoint_callback]
         )
 
-        model.summary()
+        if self.epochs == 0:
+            # 一般都是训练前专门看一下信息 所以正常训练时就不显示了 主要还是tmux不能上翻 有的时候会遮挡想看的信息
+            model.summary()
 
         return history
 
