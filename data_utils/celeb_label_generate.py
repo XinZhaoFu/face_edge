@@ -41,22 +41,41 @@ def get_class_code(class_label):
 def code_label(label, class_code):
     """
     转为数字标签
+    鼻子的编码为6 若不要原生鼻子 则将其转为皮肤 皮肤编码为1
+
     :param label:
     :param class_code:
     :return:
     """
-    return label / 255 * class_code
+    if class_code == 6:
+        class_code = 1
+    (rows, cols) = np.where(label == 255)
+    label[rows, cols] = class_code
+    return label
 
 
-def concat_label(labels, class_codes, contour_point_file_path, nose_point_file_path, img_rows, img_cols, priority=None):
+def overlay_label(priority_labels, priority_labels_class_code):
+    """
+    将所有的label依次进行覆盖
+
+    :param priority_labels_class_code:
+    :param priority_labels:
+    :return:
+    """
+    con_label = np.array(priority_labels[0], dtype=np.uint8)
+    for label, code in zip(priority_labels[1:], priority_labels_class_code[1:]):
+        (rows, cols) = np.where(label == code)
+        con_label[rows, cols] = code
+
+    return con_label
+
+
+def concat_label(labels, class_codes, priority=None):
     """
     合并各类数字标签
     同时需要注意遮盖问题 目前的优先级是预估的 不一定是准确的
     labels 和 class_codes的索引需要对应
-    :param nose_point_file_path:
-    :param contour_point_file_path:
-    :param img_cols:
-    :param img_rows:
+
     :param priority:
     :param class_codes:
     :param labels:
@@ -64,47 +83,24 @@ def concat_label(labels, class_codes, contour_point_file_path, nose_point_file_p
     """
     if priority is None:
         priority = (1, 14, 11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 15, 16, 17, 18)
-
-    con_label = np.zeros(shape=labels[0].shape, dtype=np.uint8)
-    label_rows, label_cols = labels[0].shape
     priority_labels = []
+    priority_labels_class_code = []
 
+    # 调整传入label的顺序
     for pri_code in priority:
         if pri_code in class_codes:
             index_class_codes = class_codes.index(pri_code)
             label = labels[index_class_codes]
             label = code_label(label, pri_code)
             priority_labels.append(label)
+            priority_labels_class_code.append(pri_code)
 
-    # 这里效率很低 后面觉得慢的话需要优化这里
-    for label in priority_labels:
-        for row in range(label_rows):
-            for col in range(label_cols):
-                if label[row, col] != 0:
-                    con_label[row, col] = label[row, col]
-
-    con_label = get_contour_pupil_label(label=con_label,
-                                        contour_point_file_path=contour_point_file_path,
-                                        img_rows=img_rows,
-                                        img_cols=img_cols)
-    con_label = cv2.Canny(con_label, 0, 0)
-    con_label = get_nose_label(label=con_label,
-                               img_rows=img_rows,
-                               img_cols=img_cols,
-                               nose_point_file_path=nose_point_file_path,
-                               draw_type=0)
+    con_label = overlay_label(priority_labels, priority_labels_class_code)
 
     return con_label
 
 
-def main():
-    # nose可以是分割的 seg  也可以是拟合的 fit
-    nose_type = 'draw'
-    save_path = '../data/celeb_edge/'
-    contour_point_file_path = '../data/celeb_eye_contour/'
-    nose_point_file_path = '../data/celeb_106points/'
-    img_path = '../data/celeb_ori_img/'
-    label_path = '../data/celeb_ori_label/'
+def get_semantic_label(label_path, save_path):
     label_file_list = glob(label_path + '*.png')
     label_file_list.sort()
 
@@ -118,8 +114,6 @@ def main():
 
         label_name = (label_file_path.split('/')[-1]).split('.')[0]
         cur_label_name, label_class = label_name.split('_')[0], label_name[6:]
-        if nose_type == 'draw' and label_class == 'nose':
-            continue
         class_code_label = get_class_code(label_class)
 
         if last_label_name is None:
@@ -133,29 +127,81 @@ def main():
 
         if last_label_name != cur_label_name:
             last_label_name_easy = str(int(last_label_name))
-            img = cv2.imread(img_path + last_label_name_easy + '.jpg')
-            img_rows, img_cols, _ = img.shape
-            last_contour_point_file_path = contour_point_file_path + last_label_name_easy + '.txt'
-            last_nose_point_file_path = nose_point_file_path + last_label_name_easy + '.txt'
 
-            res_label = concat_label(labels, class_codes, last_contour_point_file_path, last_nose_point_file_path,
-                                     img_rows, img_cols)
-            cv2.imwrite(save_path+last_label_name_easy+'.png', res_label)
+            res_label = concat_label(labels, class_codes)
+            cv2.imwrite(save_path + last_label_name_easy + '.png', res_label)
 
             last_label_name = cur_label_name
             labels = [label]
             class_codes = [class_code_label]
 
-        if index == len(label_file_list)-1:
+        if index == len(label_file_list) - 1:
             cur_label_name_easy = str(int(cur_label_name))
-            img = cv2.imread(img_path + cur_label_name_easy + '.jpg')
-            img_rows, img_cols, _ = img.shape
-            cur_contour_point_file_path = contour_point_file_path + cur_label_name_easy + '.txt'
-            cur_nose_point_file_path = nose_point_file_path + cur_label_name_easy + '.txt'
-
-            res_label = concat_label(labels, class_codes, cur_contour_point_file_path, cur_nose_point_file_path,
-                                     img_rows, img_cols)
+            res_label = concat_label(labels, class_codes)
             cv2.imwrite(save_path + cur_label_name_easy + '.png', res_label)
+
+
+def add_contour_nose_label(img_path, save_semantic_path, contour_point_file_path, nose_point_file_path, save_path):
+    img_file_list = glob(img_path + '*.jpg')
+    semantic_label_file_list = glob(save_semantic_path + '*.png')
+    contour_point_file_list = glob(contour_point_file_path + '*.txt')
+    nose_point_file_list = glob(nose_point_file_path + '*.txt')
+    print(len(img_file_list), len(semantic_label_file_list), len(contour_point_file_list), len(nose_point_file_list))
+    assert len(img_file_list) == len(semantic_label_file_list) == \
+           len(contour_point_file_list) == len(nose_point_file_list)
+
+    img_file_list.sort()
+    semantic_label_file_list.sort()
+    contour_point_file_list.sort()
+    nose_point_file_list.sort()
+
+    for img_file_path, semantic_label_path, contour_point_path, nose_point_path \
+            in tqdm(zip(img_file_list, semantic_label_file_list, contour_point_file_list, nose_point_file_list),
+                    total=len(img_file_list)):
+        img_name = (img_file_path.split('/')[-1]).split('.')[0]
+        label_name = (semantic_label_path.split('/')[-1]).split('.')[0]
+        contour_point_name = (contour_point_path.split('/')[-1]).split('.')[0]
+        nose_point_name = (nose_point_path.split('/')[-1]).split('.')[0]
+
+        assert img_name == label_name == contour_point_name == nose_point_name
+
+        img = cv2.imread(img_file_path, 0)
+        semantic_label = cv2.imread(semantic_label_path, 0)
+        img_rows, img_cols = img.shape
+
+        con_label = get_contour_pupil_label(label=semantic_label,
+                                            contour_point_file_path=contour_point_path,
+                                            img_rows=img_rows,
+                                            img_cols=img_cols)
+        # con_label = cv2.Canny(con_label, 0, 0)
+        con_label = get_nose_label(label=con_label,
+                                   img_rows=img_rows,
+                                   img_cols=img_cols,
+                                   nose_point_file_path=nose_point_path,
+                                   draw_type=0)
+
+        cv2.imwrite(save_path + label_name + '.png', con_label)
+
+
+def main(is_get_semantic_label=True):
+    # save_semantic_path = '../data/celeb_semantic_label/'
+    # save_path = '../data/celeb_edge/'
+    # contour_point_file_path = '../data/celeb_eye_contour/'
+    # nose_point_file_path = '../data/celeb_106points/'
+    # img_path = '../data/celeb_ori_img/'
+    # label_path = '../data/celeb_ori_label/'
+
+    save_semantic_path = '../data/temp/celeb_semantic_label/'
+    save_path = '../data/temp/celeb_edge/'
+    contour_point_file_path = '../data/temp/celeb_eye_contour/'
+    nose_point_file_path = '../data/temp/celeb_106points/'
+    img_path = '../data/temp/celeb_ori_img/'
+    label_path = '../data/temp/celeb_ori_label/'
+
+    if is_get_semantic_label is True:
+        get_semantic_label(label_path, save_semantic_path)
+
+    add_contour_nose_label(img_path, save_semantic_path, contour_point_file_path, nose_point_file_path, save_path)
 
 
 if __name__ == '__main__':
@@ -163,4 +209,3 @@ if __name__ == '__main__':
     main()
     end_time = datetime.datetime.now()
     print('time:\t' + str(end_time - start_time).split('.')[0])
-

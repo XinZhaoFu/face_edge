@@ -9,6 +9,7 @@ def img_label_distribution(ori_img_file_path,
                            train_label_file_path,
                            val_img_file_path,
                            val_label_file_path,
+                           split_rate=0.8,
                            is_recreate_dir=False):
     ori_img_file_list = glob(ori_img_file_path + '*.jpg')
     ori_label_file_list = glob(ori_label_file_path + '*.png')
@@ -20,7 +21,7 @@ def img_label_distribution(ori_img_file_path,
 
     ori_img_file_list, ori_label_file_list = shuffle_file(ori_img_file_list, ori_label_file_list)
 
-    train_file_num = int(len(ori_img_file_list) * 0.8)
+    train_file_num = int(len(ori_img_file_list) * split_rate)
 
     print('[info] train num:\t' + str(train_file_num) + '\tval num:\t' + str(len(ori_img_file_list) - train_file_num))
 
@@ -92,6 +93,7 @@ if __name__ == '__main__':
                            train_label_file_path='../data/train/label/',
                            val_img_file_path='../data/val/img/',
                            val_label_file_path='../data/val/label/',
+                           split_rate=0.95
                            is_recreate_dir=True)
 
     # celeb_label_distribution()

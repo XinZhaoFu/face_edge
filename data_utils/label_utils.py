@@ -99,10 +99,16 @@ def get_contour_pupil_label(label, contour_point_file_path, img_rows, img_cols):
     iris_label, _ = draw_contour_pupil(contour_point_file_path, img_rows, img_cols, label_rows, label_cols)
 
     # 寻找眼睛整体与虹膜整体的并集 这么操作是因为虹膜轮廓不一定完全位于眼睛内部 会有超出的部分
-    for row in range(label_rows):
-        for col in range(label_cols):
-            if (label[row, col] == 4 or label[row, col] == 5) and iris_label[row, col] == 255:
-                label[row, col] = 19
+    intersection_label = np.zeros(shape=(label_rows, label_cols), dtype=np.uint8)
+    (rows, cols) = np.where(np.logical_or(label == 4, label == 5))
+    for row, col in zip(rows, cols):
+        if iris_label[row, col] == 255:
+            intersection_label[row, col] = 19
+
+    label = cv2.Canny(label, 0, 0)
+
+    contours, _ = cv2.findContours(intersection_label, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    cv2.drawContours(label, contours, -1, 255, 1)
 
     return label
 
@@ -396,11 +402,9 @@ def get_iris_fit_ellipse(label, is_canny=True):
     :return:
     """
     eyes_label = np.zeros(shape=label.shape, dtype=np.uint8)
-    rows, cols = label.shape
-    for row in range(rows):
-        for col in range(cols):
-            if label[row, col] == 4 or label[row, col] == 5:
-                eyes_label[row, col] = 255
+    (rows, cols) = np.where(np.logical_and(label == 4, label == 5))
+    for row, col in zip(rows, cols):
+        eyes_label[row, col] = 255
 
     contours, hierarchy = cv2.findContours(eyes_label, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -471,10 +475,6 @@ def get_nose_by_seg_label(label, small_rate=1.0):
     temp[ori_centroid_row - new_centroid_row: ori_centroid_row - new_centroid_row + s_rows,
         ori_centroid_col - new_centroid_col: ori_centroid_col - new_centroid_col + s_cols] = nose_label[:, :]
 
-    # for row in range(rows):
-    #     for col in range(cols):
-    #         if temp[row][col] == 6:
-    #             label[row][col] = 6
     temp_target_points = get_target_point(temp, 6)
     for target_point in temp_target_points:
         label[target_point[0]][target_point[1]] = 6

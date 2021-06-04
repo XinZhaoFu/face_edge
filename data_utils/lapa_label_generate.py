@@ -57,6 +57,7 @@ def main():
 
     img_file_list = glob(img_path + '*.jpg')
     label_file_list = glob(label_path + '*.png')
+
     assert len(img_file_list) == len(label_file_list)
     img_file_list.sort()
     label_file_list.sort()

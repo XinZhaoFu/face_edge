@@ -9,6 +9,7 @@ def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=Fa
     图像格式为(size, size, 3)
     标签格式为(size, size, 1)
     标签总计2类(含背景)
+
     :param batch_size:
     :param data_augmentation:
     :param file_number:可以节取一部分数据
@@ -63,11 +64,11 @@ def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=Fa
 def load_and_preprocess_image_label(img_path, label_path):
     """
     对img和label进行读取预处理
+
     :param label_path:
     :param img_path:
     :return:
     """
-    # print(img_path, label_path)
     image = tf.io.read_file(img_path)
     image = tf.image.decode_jpeg(image, channels=3)
     image = tf.image.resize(image, [512, 512])
@@ -78,6 +79,7 @@ def load_and_preprocess_image_label(img_path, label_path):
     label = tf.image.resize(label, [512, 512], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
     label = tf.reshape(tensor=label, shape=(512, 512))
     label = tf.cast(label, tf.float32) / 255.0
+    # 需要独热码 就注释掉上面一行 更换为下面两行
     # label = tf.cast(label, tf.uint8)
     # label = tf.one_hot(indices=label, depth=2, on_value=1, off_value=0)
 
