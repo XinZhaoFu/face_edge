@@ -7,16 +7,14 @@ def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=Fa
     """
     将图像和标签数据队列处理后以tensor返回
     图像格式为(size, size, 3)
-    标签格式为(size, size, 1)
-    标签总计2类(含背景)
+    标签格式为(size, size)
 
     :param batch_size:
     :param data_augmentation:
-    :param file_number:可以节取一部分数据
+    :param file_number:可以截取一部分数据
     :param file_path:
     :return:
     """
-    autotune = tf.data.experimental.AUTOTUNE
 
     img_path = file_path + 'img/'
     label_path = file_path + 'label/'
@@ -29,7 +27,7 @@ def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=Fa
     img_file_path_list = glob(img_path + '*.jpg')
     label_file_path_list = glob(label_path + '*.png')
     assert len(img_file_path_list) == len(label_file_path_list)
-    print('[info] 数量校验通过')
+    print('[INFO] 数量校验通过')
     """
     正序保证文件对应
     下面的check_img_label_list函数也是为了保证文件对应
@@ -52,11 +50,11 @@ def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=Fa
     check_img_label_list(img_file_path_list, label_file_path_list)
 
     image_label_ds = tf.data.Dataset.from_tensor_slices((img_file_path_list, label_file_path_list))
-    image_label_ds = image_label_ds.map(load_and_preprocess_image_label, num_parallel_calls=autotune)
+    image_label_ds = image_label_ds.map(load_and_preprocess_image_label, num_parallel_calls=tf.data.AUTOTUNE)
 
-    image_label_ds = image_label_ds.shuffle(buffer_size=batch_size * 4)
-    image_label_ds = image_label_ds.batch(batch_size)
-    image_label_ds = image_label_ds.prefetch(buffer_size=batch_size * 4)
+    image_label_ds = image_label_ds.shuffle(buffer_size=batch_size * 8)
+    image_label_ds = image_label_ds.batch(batch_size=batch_size)
+    image_label_ds = image_label_ds.prefetch(tf.data.AUTOTUNE)
 
     return image_label_ds
 
@@ -83,6 +81,6 @@ def load_and_preprocess_image_label(img_path, label_path):
     # label = tf.cast(label, tf.uint8)
     # label = tf.one_hot(indices=label, depth=2, on_value=1, off_value=0)
 
-    print(image.shape, label.shape)
+    # print(image.shape, label.shape)
     return image, label
 

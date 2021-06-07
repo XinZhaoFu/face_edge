@@ -93,7 +93,7 @@ if __name__ == '__main__':
                            train_label_file_path='../data/train/label/',
                            val_img_file_path='../data/val/img/',
                            val_label_file_path='../data/val/label/',
-                           split_rate=0.95
+                           split_rate=0.95,
                            is_recreate_dir=True)
 
     # celeb_label_distribution()

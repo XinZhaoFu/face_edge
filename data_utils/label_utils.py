@@ -59,7 +59,7 @@ def get_nose_label(label, img_rows, img_cols, nose_point_file_path, draw_type=0)
                                     [4, 5, 6, 7, 8],
                                     [9, 11, 13, 4],
                                     [10, 12, 14, 8]]
-            该示例将绘制直线鼻梁 直线鼻左侧 直线鼻右侧 直线鼻下沿
+            该示例将绘制直线鼻梁 直线鼻下沿 直线鼻左侧 直线鼻右侧 
             
         示例2：
             line_point_index_list = [[2, 3], [11, 13, 4, 5], [12, 14, 8, 7]]
@@ -77,7 +77,7 @@ def get_nose_label(label, img_rows, img_cols, nose_point_file_path, draw_type=0)
         label = draw_nose_line(label, nose_point_list, line_point_index_list, thickness=1)
 
     # 绘制拟合鼻子轮廓 用传入的三组点(三组分别为左鼻侧、右鼻侧、鼻下沿)分别进行多项式拟合 然后通过插值(点距为3) 获得更多点坐标 并将这些点相连
-    fit_point_index_list = [[11, 13, 4], [12, 14, 8], []]
+    fit_point_index_list = [[11, 13, 4], [12, 14, 8], [4, 5, 6, 7, 8]]
     label = draw_nose_fit(label, nose_point_list, fit_point_index_list, thickness=1)
 
     return label
@@ -125,7 +125,7 @@ def nose_side_fit(point_list):
     point_x = point_list[:, 1]
     point_y = point_list[:, 0]
 
-    fit_point_x, fit_point_y = fit_interpolation(point_x, point_y, 2, point_x[0], point_x[-1], 3)
+    fit_point_x, fit_point_y = fit_interpolation(point_x, point_y, 2, (point_x[0] + point_x[1])//2, point_x[-1], 3)
 
     fit_point = np.empty(shape=(len(fit_point_x), 2), dtype=np.int32)
     fit_point[:, 1] = fit_point_x

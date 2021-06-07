@@ -22,6 +22,7 @@ def dice_loss(smooth=1.0):
         intersection = tf.reduce_sum(y_true * y_pred)
 
         loss = 1 - (2.0 * intersection + smooth) / (y_true_sum + y_pred_sum + smooth)
+        loss = loss * 1.024
         return loss
 
     return dice_loss_fixed

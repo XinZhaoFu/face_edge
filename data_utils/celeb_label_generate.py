@@ -184,19 +184,19 @@ def add_contour_nose_label(img_path, save_semantic_path, contour_point_file_path
 
 
 def main(is_get_semantic_label=True):
-    # save_semantic_path = '../data/celeb_semantic_label/'
-    # save_path = '../data/celeb_edge/'
-    # contour_point_file_path = '../data/celeb_eye_contour/'
-    # nose_point_file_path = '../data/celeb_106points/'
-    # img_path = '../data/celeb_ori_img/'
-    # label_path = '../data/celeb_ori_label/'
+    save_semantic_path = '../data/celeb_semantic_label/'
+    save_path = '../data/celeb_edge/'
+    contour_point_file_path = '../data/celeb_eye_contour/'
+    nose_point_file_path = '../data/celeb_106points/'
+    img_path = '../data/celeb_ori_img/'
+    label_path = '../data/celeb_ori_label/'
 
-    save_semantic_path = '../data/temp/celeb_semantic_label/'
-    save_path = '../data/temp/celeb_edge/'
-    contour_point_file_path = '../data/temp/celeb_eye_contour/'
-    nose_point_file_path = '../data/temp/celeb_106points/'
-    img_path = '../data/temp/celeb_ori_img/'
-    label_path = '../data/temp/celeb_ori_label/'
+    # save_semantic_path = '../data/temp/celeb_semantic_label/'
+    # save_path = '../data/temp/celeb_edge/'
+    # contour_point_file_path = '../data/temp/celeb_eye_contour/'
+    # nose_point_file_path = '../data/temp/celeb_106points/'
+    # img_path = '../data/temp/celeb_ori_img/'
+    # label_path = '../data/temp/celeb_ori_label/'
 
     if is_get_semantic_label is True:
         get_semantic_label(label_path, save_semantic_path)
@@ -206,6 +206,6 @@ def main(is_get_semantic_label=True):
 
 if __name__ == '__main__':
     start_time = datetime.datetime.now()
-    main()
+    main(is_get_semantic_label=True)
     end_time = datetime.datetime.now()
     print('time:\t' + str(end_time - start_time).split('.')[0])

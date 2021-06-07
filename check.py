@@ -29,7 +29,7 @@ celeb_106points_file_list = glob(celeb_106points_path + '*.txt')
 
 lapa_img_file_list = glob(lapa_img_path + '*.jpg')
 lapa_label_file_list = glob(lapa_label_path + '*.png')
-lapa_contour_file_list = glob()
+lapa_contour_file_list = glob(lapa_contour_path + '*.txt')
 
 print('设备信息:')
 print(device_lib.list_local_devices())

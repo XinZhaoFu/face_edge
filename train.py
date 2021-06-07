@@ -1,8 +1,9 @@
 # coding=utf-8
+import os
 import argparse
 import datetime
 import tensorflow as tf
-import os
+from tensorflow.keras import mixed_precision
 from model.dense_unet import DenseUNet
 from model.densenet import DenseNet
 from model.unet import UNet
@@ -15,12 +16,20 @@ import setproctitle
 import numpy as np
 from loss.loss import binary_focal_loss, dice_loss, mix_dice_focal_loss, binary_crossentropy_weight, u2net_bce_loss
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
+
+setproctitle.setproctitle("face_edge")
 
 gpus = tf.config.list_physical_devices('GPU')
 if len(gpus) > 0:
     tf.config.experimental.set_memory_growth(gpus[0], True)
 
-setproctitle.setproctitle("face_edge")
+policy = mixed_precision.Policy('mixed_float16')
+mixed_precision.set_global_policy(policy)
+
+print('[INFO] 计算类型: %s' % policy.compute_dtype)
+print('[INFO] 变量类型: %s' % policy.variable_dtype)
 
 
 def parseArgs():
@@ -178,7 +187,7 @@ def plot_learning_curves(history, plt_name):
     pd.DataFrame(history.history).plot(figsize=(8, 5))
     plt.grid(True)
     plt.gca().set_ylim(0, 1)
-    plt.savefig('./log/'+plt_name+'.jpg')
+    plt.savefig('./log/' + plt_name + '.jpg')
 
 
 def train_init():
@@ -186,6 +195,9 @@ def train_init():
     # ex_info = 'detail_con_unet_face_edge_focal'
     # ex_info = 'bisev2_mix_loss'
     ex_info = 'u2net_mix_loss'
+    # ex_info = 'u2net_mix_loss_mix_precision'
+    print('[INFO] 实验内容：' + ex_info)
+
     start_time = datetime.datetime.now()
 
     tran_tab = str.maketrans('- :.', '____')

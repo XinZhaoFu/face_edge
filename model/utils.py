@@ -1,6 +1,7 @@
 from tensorflow.keras.layers import Conv2D, BatchNormalization, Activation, SeparableConv2D, \
     DepthwiseConv2D, MaxPooling2D, UpSampling2D, concatenate
 from tensorflow.keras import Model, regularizers, Sequential
+import tensorflow as tf
 
 
 class Con_Bn_Act(Model):
@@ -44,6 +45,8 @@ class Con_Bn_Act(Model):
         self.bn = BatchNormalization()
         if self.activation is not None:
             self.act = Activation(self.activation)
+        if self.activation == 'sigmoid' or self.activation == 'softmax':
+            self.act = Activation(self.activation, dtype='float32')
 
     def call(self, inputs, training=None, mask=None):
         con = self.con(inputs)
