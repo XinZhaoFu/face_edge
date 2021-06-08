@@ -10,7 +10,8 @@ def img_label_distribution(ori_img_file_path,
                            val_img_file_path,
                            val_label_file_path,
                            split_rate=0.8,
-                           is_recreate_dir=False):
+                           is_recreate_dir=False,
+                           resize=0):
     ori_img_file_list = glob(ori_img_file_path + '*.jpg')
     ori_label_file_list = glob(ori_label_file_path + '*.png')
 
@@ -30,14 +31,16 @@ def img_label_distribution(ori_img_file_path,
                            distribution_label_file_list=ori_label_file_list[:train_file_num],
                            distribution_img_file_path=train_img_file_path,
                            distribution_label_file_path=train_label_file_path,
-                           is_recreate_dir=is_recreate_dir)
+                           is_recreate_dir=is_recreate_dir,
+                           resize=resize)
 
     print('[info] -- -- --\t val数据分发 \t-- -- --')
     distribution_img_label(distribution_img_file_list=ori_img_file_list[train_file_num:],
                            distribution_label_file_list=ori_label_file_list[train_file_num:],
                            distribution_img_file_path=val_img_file_path,
                            distribution_label_file_path=val_label_file_path,
-                           is_recreate_dir=is_recreate_dir)
+                           is_recreate_dir=is_recreate_dir,
+                           resize=resize)
 
 
 def celeb_label_distribution():
@@ -94,7 +97,8 @@ if __name__ == '__main__':
                            val_img_file_path='../data/val/img/',
                            val_label_file_path='../data/val/label/',
                            split_rate=0.95,
-                           is_recreate_dir=True)
+                           is_recreate_dir=True,
+                           resize=512)
 
     # celeb_label_distribution()
     # celeb_img_edge_distribution()

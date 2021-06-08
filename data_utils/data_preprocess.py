@@ -51,10 +51,10 @@ def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=Fa
 
     image_label_ds = tf.data.Dataset.from_tensor_slices((img_file_path_list, label_file_path_list))
     image_label_ds = image_label_ds.map(load_and_preprocess_image_label, num_parallel_calls=tf.data.AUTOTUNE)
-
+    # image_label_ds = image_label_ds.cache()
     image_label_ds = image_label_ds.shuffle(buffer_size=batch_size * 8)
     image_label_ds = image_label_ds.batch(batch_size=batch_size)
-    image_label_ds = image_label_ds.prefetch(tf.data.AUTOTUNE)
+    image_label_ds = image_label_ds.prefetch(buffer_size=tf.data.AUTOTUNE)
 
     return image_label_ds
 
@@ -69,12 +69,12 @@ def load_and_preprocess_image_label(img_path, label_path):
     """
     image = tf.io.read_file(img_path)
     image = tf.image.decode_jpeg(image, channels=3)
-    image = tf.image.resize(image, [512, 512])
+    # image = tf.image.resize(image, [512, 512])
     image = tf.cast(image, tf.float32) / 255.0
 
     label = tf.io.read_file(label_path)
     label = tf.image.decode_png(label, channels=1)
-    label = tf.image.resize(label, [512, 512], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
+    # label = tf.image.resize(label, [512, 512], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
     label = tf.reshape(tensor=label, shape=(512, 512))
     label = tf.cast(label, tf.float32) / 255.0
     # 需要独热码 就注释掉上面一行 更换为下面两行

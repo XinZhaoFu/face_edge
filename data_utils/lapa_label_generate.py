@@ -4,7 +4,7 @@ import numpy as np
 from glob import glob
 from tqdm import tqdm
 import datetime
-from label_utils import get_contour_pupil_label, get_nose_label, get_target_point
+from label_utils import get_contour_pupil_label, get_nose_label
 
 """
 label	class
@@ -25,9 +25,8 @@ np.set_printoptions(threshold=np.inf)
 
 
 def clean_ori_nose(label):
-    points = get_target_point(label, 6)
-    for point in points:
-        label[point[0]][point[1]] = 6
+    (rows, cols) = np.where(label == 6)
+    label[rows, cols] = 1
 
     return label
 
@@ -38,7 +37,7 @@ def get_label(label, contour_point_file_path, nose_point_file_path, img_rows, im
                                     contour_point_file_path=contour_point_file_path,
                                     img_rows=img_rows,
                                     img_cols=img_cols)
-    label = cv2.Canny(label, 0, 0)
+    # label = cv2.Canny(label, 0, 0)
     label = get_nose_label(label=label,
                            img_rows=img_rows,
                            img_cols=img_cols,
@@ -49,11 +48,17 @@ def get_label(label, contour_point_file_path, nose_point_file_path, img_rows, im
 
 
 def main():
-    img_path = '../data/lapa_ori_img/'
-    label_path = '../data/lapa_ori_label/'
-    save_label_path = '../data/lapa_edge/'
-    contour_point_file_path = '../data/lapa_eye_contour/'
-    nose_point_file_path = '../data/lapa_106points/'
+    # img_path = '../data/lapa_ori_img/'
+    # label_path = '../data/lapa_ori_label/'
+    # save_label_path = '../data/lapa_edge/'
+    # contour_point_file_path = '../data/lapa_eye_contour/'
+    # nose_point_file_path = '../data/lapa_106points/'
+
+    img_path = '../data/temp/lapa_ori_img/'
+    label_path = '../data/temp/lapa_ori_label/'
+    save_label_path = '../data/temp/lapa_edge/'
+    contour_point_file_path = '../data/temp/lapa_eye_contour/'
+    nose_point_file_path = '../data/temp/lapa_106points/'
 
     img_file_list = glob(img_path + '*.jpg')
     label_file_list = glob(label_path + '*.png')

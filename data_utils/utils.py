@@ -2,6 +2,7 @@
 import numpy as np
 import os
 import shutil
+import cv2
 from tqdm import tqdm
 
 
@@ -25,10 +26,12 @@ def distribution_img_label(distribution_img_file_list,
                            distribution_label_file_list,
                            distribution_img_file_path,
                            distribution_label_file_path,
-                           is_recreate_dir=False):
+                           is_recreate_dir=False,
+                           resize=0):
     """
     将img和label从一文件夹转至其他位置
 
+    :param resize:
     :param is_recreate_dir:
     :param distribution_img_file_list:
     :param distribution_label_file_list:
@@ -42,14 +45,21 @@ def distribution_img_label(distribution_img_file_list,
 
     assert len(distribution_img_file_list) == len(distribution_label_file_list)
 
-    for index in tqdm(range(len(distribution_img_file_list))):
-        img_file = distribution_img_file_list[index]
-        label_file = distribution_label_file_list[index]
-        img_name = img_file.split('/')[-1]
-        label_name = label_file.split('/')[-1]
+    for img_file_path, label_file_path in tqdm(zip(distribution_img_file_list, distribution_label_file_list),
+                                               total=len(distribution_img_file_list)):
+        img_name = img_file_path.split('/')[-1]
+        label_name = label_file_path.split('/')[-1]
+        if resize == 0:
+            shutil.copyfile(img_file_path, distribution_img_file_path + img_name)
+            shutil.copyfile(label_file_path, distribution_label_file_path + label_name)
+        else:
+            img = cv2.imread(img_file_path)
+            img = cv2.resize(img, dsize=(resize, resize))
+            label = cv2.imread(label_file_path)
+            label = cv2.resize(label, dsize=(resize, resize), interpolation=cv2.INTER_NEAREST)
 
-        shutil.copyfile(img_file, distribution_img_file_path + img_name)
-        shutil.copyfile(label_file, distribution_label_file_path + label_name)
+            cv2.imwrite(distribution_img_file_path + img_name, img)
+            cv2.imwrite(distribution_label_file_path + label_name, label)
 
 
 def distribution_file(file_path_list, target_file_path, is_recreate_dir=False):

@@ -32,7 +32,8 @@ class Con_Bn_Act(Model):
         else:
             self.con_regularizer = None
 
-        # kernel_initializer_special_cases = ['he_normal', 'he_uniform', 'lecun_normal', 'lecun_uniform']
+        # kernel_initializer_special_cases = ['glorot_uniform',
+        # 'he_normal', 'he_uniform', 'lecun_normal', 'lecun_uniform']
         self.con = Conv2D(filters=self.filters,
                           kernel_size=self.kernel_size,
                           padding=self.padding,

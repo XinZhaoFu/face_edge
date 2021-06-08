@@ -135,7 +135,7 @@ class train:
             #              end_activation='sigmoid')
             # model = BisenetV2(detail_filters=32, aggregation_filters=32, num_class=1, final_act='sigmoid')
             model = U2Net(rsu_middle_filters=16,
-                          rsu_out_filters=32,
+                          rsu_out_filters=64,
                           num_class=1,
                           end_activation='sigmoid',
                           only_output=True)
@@ -145,7 +145,7 @@ class train:
                 print('[INFO] 使用sgd,其值为：\t' + str(self.learning_rate))
             else:
                 optimizer = 'Adam'
-                print('[INFO] 使用adam')
+                print('[INFO] 使用Adam')
 
             model.compile(
                 optimizer=optimizer,
@@ -165,7 +165,7 @@ class train:
                 save_weights_only=True,
                 save_best_only=True,
                 mode='auto',
-                save_freq='epoch')
+                save_freq=10)
 
         history = model.fit(
             self.train_datasets,
@@ -194,9 +194,10 @@ def train_init():
     # ex_info = 'dense_unet_df32sf16_mix_loss'
     # ex_info = 'detail_con_unet_face_edge_focal'
     # ex_info = 'bisev2_mix_loss'
-    ex_info = 'u2net_mix_loss'
+    # ex_info = 'u2net_mix_loss'
+    ex_info = 'u2net_16_64'
     # ex_info = 'u2net_mix_loss_mix_precision'
-    print('[INFO] 实验内容：' + ex_info)
+    print('[INFO] 实验名称：' + ex_info)
 
     start_time = datetime.datetime.now()
 
