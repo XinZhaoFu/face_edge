@@ -8,6 +8,7 @@ val_img_path = './data/val/img/'
 val_label_path = './data/val/label/'
 
 celeb_img_path = './data/celeb_ori_img/'
+celeb_aug_img_path = './data/celeb_aug_img/'
 celeb_label_path = './data/celeb_edge/'
 celeb_contour_path = './data/celeb_eye_contour/'
 celeb_106points_path = './data/celeb_106points/'
@@ -23,6 +24,7 @@ val_img_file_list = glob(val_img_path + '*.jpg')
 val_label_file_list = glob(val_label_path + '*.png')
 
 celeb_img_file_list = glob(celeb_img_path + '*.jpg')
+celeb_aug_img_file_list = glob(celeb_aug_img_path + '*.jpg')
 celeb_label_file_list = glob(celeb_label_path + '*.png')
 celeb_contour_file_list = glob(celeb_contour_path + '*.txt')
 celeb_106points_file_list = glob(celeb_106points_path + '*.txt')
@@ -41,6 +43,7 @@ print('验证集图片数量:\t' + str(len(val_img_file_list)))
 print('验证集标签数量:\t' + str(len(val_label_file_list)))
 print('\n')
 print('celeb图片数量:\t' + str(len(celeb_img_file_list)))
+print('celeb增强图片数量:\t' + str(len(celeb_aug_img_file_list)))
 print('celeb标签数量:\t' + str(len(celeb_label_file_list)))
 print('celeb虹膜点数量:\t' + str(len(celeb_contour_file_list)))
 print('celeb106点数量:\t' + str(len(celeb_106points_file_list)))

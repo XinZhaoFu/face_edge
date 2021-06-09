@@ -3,6 +3,7 @@ import numpy as np
 import os
 import shutil
 import cv2
+from glob import glob
 from tqdm import tqdm
 
 
@@ -121,3 +122,21 @@ def check_img_label_list(img_file_path_list, label_file_path_list):
 
         assert img_name == label_name
     print('[INFO] 文件对应检查通过')
+
+
+def color_clahe(img):
+    clahe = cv2.createCLAHE(clipLimit=2, tileGridSize=(8, 8))
+    planes = cv2.split(img)
+    for i in range(0, 3):
+        planes[i] = clahe.apply(planes[i])
+    img = cv2.merge(planes)
+
+    return img
+
+
+def clean_val_file(val_file_path, val_type='*.png'):
+    val_file_list = glob(val_file_path + val_type)
+    for val_file in tqdm(val_file_list):
+        val_file_name = (val_file.split('/')[-1]).split('.')[0]
+        if '_' in val_file_name:
+            os.remove(val_file)

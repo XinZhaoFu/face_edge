@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import datetime
 from tqdm import tqdm
-from label_utils import get_contour_pupil_label, get_nose_label
+from label_utils import get_contour_pupil_label, get_nose_label, get_senses_augmentation
 
 """
 label class         name
@@ -141,11 +141,30 @@ def get_semantic_label(label_path, save_path):
             cv2.imwrite(save_path + cur_label_name_easy + '.png', res_label)
 
 
-def add_contour_nose_label(img_path, save_semantic_path, contour_point_file_path, nose_point_file_path, save_path):
+def add_contour_nose_label(img_path,
+                           save_semantic_path,
+                           contour_point_file_path,
+                           nose_point_file_path,
+                           save_label_path,
+                           save_img_path,
+                           is_augmentation=False):
+    """
+    在分割图的基础上获取图片
+
+    :param save_img_path:
+    :param img_path:
+    :param save_semantic_path:
+    :param contour_point_file_path:
+    :param nose_point_file_path:
+    :param save_label_path:
+    :param is_augmentation:
+    :return:
+    """
     img_file_list = glob(img_path + '*.jpg')
     semantic_label_file_list = glob(save_semantic_path + '*.png')
     contour_point_file_list = glob(contour_point_file_path + '*.txt')
     nose_point_file_list = glob(nose_point_file_path + '*.txt')
+
     print(len(img_file_list), len(semantic_label_file_list), len(contour_point_file_list), len(nose_point_file_list))
     assert len(img_file_list) == len(semantic_label_file_list) == \
            len(contour_point_file_list) == len(nose_point_file_list)
@@ -165,9 +184,9 @@ def add_contour_nose_label(img_path, save_semantic_path, contour_point_file_path
 
         assert img_name == label_name == contour_point_name == nose_point_name
 
-        img = cv2.imread(img_file_path, 0)
+        img = cv2.imread(img_file_path)
         semantic_label = cv2.imread(semantic_label_path, 0)
-        img_rows, img_cols = img.shape
+        img_rows, img_cols, _ = img.shape
 
         con_label = get_contour_pupil_label(label=semantic_label,
                                             contour_point_file_path=contour_point_path,
@@ -180,19 +199,33 @@ def add_contour_nose_label(img_path, save_semantic_path, contour_point_file_path
                                    nose_point_file_path=nose_point_path,
                                    draw_type=0)
 
-        cv2.imwrite(save_path + label_name + '.png', con_label)
+        cv2.imwrite(save_label_path + label_name + '.png', con_label)
+
+        if is_augmentation:
+            cv2.imwrite(save_img_path + img_name + '.jpg', img)
+            aug_name_list = ['_face', '_left_eye', '_right_eye', '_nose', '_lip']
+            aug_img, aug_label, aug_flag = get_senses_augmentation(label=con_label, points_file_path=nose_point_path, img=img)
+
+            aug_index = 0
+            for index, aug_name in enumerate(aug_name_list):
+                if aug_flag[index] == 1:
+                    cv2.imwrite(save_img_path + img_name + aug_name + '.jpg', aug_img[aug_index])
+                    cv2.imwrite(save_label_path + label_name + aug_name + '.png', aug_label[aug_index])
+                    aug_index += 1
 
 
-def main(is_get_semantic_label=True):
+def main(is_get_semantic_label=True, is_augmentation=False):
     save_semantic_path = '../data/celeb_semantic_label/'
-    save_path = '../data/celeb_edge/'
+    save_label_path = '../data/celeb_edge/'
+    save_img_path = '../data/celeb_aug_img/'
     contour_point_file_path = '../data/celeb_eye_contour/'
     nose_point_file_path = '../data/celeb_106points/'
     img_path = '../data/celeb_ori_img/'
     label_path = '../data/celeb_ori_label/'
 
     # save_semantic_path = '../data/temp/celeb_semantic_label/'
-    # save_path = '../data/temp/celeb_edge/'
+    # save_label_path = '../data/temp/celeb_edge/'
+    # save_img_path = '../data/temp/celeb_aug_img/'
     # contour_point_file_path = '../data/temp/celeb_eye_contour/'
     # nose_point_file_path = '../data/temp/celeb_106points/'
     # img_path = '../data/temp/celeb_ori_img/'
@@ -201,11 +234,17 @@ def main(is_get_semantic_label=True):
     if is_get_semantic_label is True:
         get_semantic_label(label_path, save_semantic_path)
 
-    add_contour_nose_label(img_path, save_semantic_path, contour_point_file_path, nose_point_file_path, save_path)
+    add_contour_nose_label(img_path=img_path,
+                           save_semantic_path=save_semantic_path,
+                           contour_point_file_path=contour_point_file_path,
+                           nose_point_file_path=nose_point_file_path,
+                           save_label_path=save_label_path,
+                           save_img_path=save_img_path,
+                           is_augmentation=is_augmentation)
 
 
 if __name__ == '__main__':
     start_time = datetime.datetime.now()
-    main(is_get_semantic_label=True)
+    main(is_get_semantic_label=False, is_augmentation=True)
     end_time = datetime.datetime.now()
     print('time:\t' + str(end_time - start_time).split('.')[0])

@@ -90,7 +90,7 @@ if __name__ == '__main__':
     #              val_img_file_path='../data/val/img/',
     #              val_label_file_path='../data/val/label/')
 
-    img_label_distribution(ori_img_file_path='../data/celeb_ori_img/',
+    img_label_distribution(ori_img_file_path='../data/celeb_aug_img/',
                            ori_label_file_path='../data/celeb_edge/',
                            train_img_file_path='../data/train/img/',
                            train_label_file_path='../data/train/label/',

@@ -1,6 +1,6 @@
 import tensorflow as tf
 from glob import glob
-from data_utils.utils import check_img_label_list
+from data_utils.utils import check_img_label_list, shuffle_file
 
 
 def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=False):
@@ -42,6 +42,7 @@ def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=Fa
         print('[INFO] 截取部分文件 其数量为：\t' + str(file_number))
         if file_number > len(img_file_path_list):
             file_number = len(img_file_path_list)
+        img_file_path_list, label_file_path_list = shuffle_file(img_file_path_list, label_file_path_list)
         img_file_path_list = img_file_path_list[:file_number]
         label_file_path_list = label_file_path_list[:file_number]
     else:

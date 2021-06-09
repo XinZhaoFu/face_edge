@@ -1,6 +1,7 @@
 # coding=utf-8
 import glob
 import cv2
+import os
 from model.dense_unet import DenseUNet
 from model.densenet import DenseNet
 from model.bisenetv2 import BisenetV2
@@ -12,7 +13,8 @@ import datetime
 from tqdm import tqdm
 from loss.loss import dice_loss, binary_focal_loss, mix_dice_focal_loss
 
-
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 np.set_printoptions(threshold=np.inf)
 
 
@@ -34,7 +36,7 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
     print('[info]模型加载 图片加载')
     # 加载模型
     model = U2Net(rsu_middle_filters=16,
-                  rsu_out_filters=32,
+                  rsu_out_filters=64,
                   num_class=1,
                   end_activation='sigmoid',
                   only_output=True)
@@ -86,7 +88,8 @@ def main():
     # ex_info = 'dense_unet_df32sf16_mix_loss'
     # ex_info = 'detail_con_unet_face_edge_focal'
     # ex_info = 'bisev2_mix_loss'
-    ex_info = 'u2net_mix_loss'
+    # ex_info = 'u2net_mix_loss'
+    ex_info = 'u2net_16_64'
 
     checkpoint_save_path = './checkpoint/' + ex_info + '.ckpt'
 

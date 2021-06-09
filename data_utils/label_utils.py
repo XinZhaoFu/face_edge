@@ -1,10 +1,12 @@
 import numpy as np
 import cv2
+from random import randint, uniform
 from skimage.measure import label as ski_label
 from skimage.measure import regionprops
 
 """
     把生成各类局部label的函数都放在了这里 目前放有鼻子、虹膜 预计未来还会有嘴巴
+    还有数据增强的函数也合并进来了
 """
 
 np.set_printoptions(threshold=np.inf)
@@ -226,8 +228,8 @@ def get_point(point_file_path, point_x_resize, point_y_resize):
             line = line.strip('\n')
             if line == 'end':
                 break
-            point_x_f = float(line.split(',')[0]) * point_x_resize
-            point_y_f = float(line.split(',')[1]) * point_y_resize
+            point_x_f = max(float(line.split(',')[0]) * point_x_resize, 0)
+            point_y_f = max(float(line.split(',')[1]) * point_y_resize, 0)
             point_list.append([point_x_f, point_y_f])
     if f:
         f.close()
@@ -263,8 +265,8 @@ def extract_index_point(point_list, point_index_list):
     :return:
     """
     extract_point_list = []
-    if len(point_list) < len(extract_point_list):
-        print('[error] 抽取队列大于点集队列')
+    if len(point_list) < len(point_index_list):
+        # print('[error] 抽取队列大于点集队列')
         return extract_point_list
 
     for point_index in point_index_list:
@@ -453,15 +455,9 @@ def get_nose_by_seg_label(label, small_rate=1.0):
     nose_label = np.zeros(shape=label.shape, dtype=np.uint8)
     rows, cols = label.shape
 
-    # for row in range(rows):
-    #     for col in range(cols):
-    #         if label[row][col] == 6:
-    #             label[row][col] = 1
-    #             nose_label[row][col] = 6
-    label_target_points = get_target_point(label, 6)
-    for target_point in label_target_points:
-        label[target_point[0]][target_point[1]] = 1
-        nose_label[target_point[0]][target_point[1]] = 6
+    (tar_rows, tar_cols) = get_target_point(label, 6)
+    label[tar_rows, tar_cols] = 1
+    nose_label[tar_rows, tar_cols] = 6
 
     # 暂时没用bbox信息 感觉写起来麻烦
     ori_centroid, _ = get_centroid_bbox(nose_label)
@@ -473,11 +469,10 @@ def get_nose_by_seg_label(label, small_rate=1.0):
     new_centroid_row, new_centroid_col = int(small_rate * ori_centroid_row), int(small_rate * ori_centroid_col)
 
     temp[ori_centroid_row - new_centroid_row: ori_centroid_row - new_centroid_row + s_rows,
-        ori_centroid_col - new_centroid_col: ori_centroid_col - new_centroid_col + s_cols] = nose_label[:, :]
+         ori_centroid_col - new_centroid_col: ori_centroid_col - new_centroid_col + s_cols] = nose_label[:, :]
 
-    temp_target_points = get_target_point(temp, 6)
-    for target_point in temp_target_points:
-        label[target_point[0]][target_point[1]] = 6
+    (temp_rows, temp_cols) = get_target_point(temp, 6)
+    label[temp_rows, temp_cols] = 6
 
     return label
 
@@ -497,3 +492,214 @@ def get_target_point(label, target):
         res_points.append([points[0][index], points[1][index]])
 
     return res_points
+
+
+def random_crop(img, label):
+    """
+    随机裁剪  因为img尺寸和label尺寸不一定对应 前半部分是img和label对应的情况 后面是不对应的情况
+
+    :param img:
+    :param label:
+    :return:
+    """
+    img_rows, img_cols, img_channel = img.shape
+    label_rows, label_cols = label.shape
+
+    if img_rows == label_rows and img_cols == label_cols:
+        if img_rows >= img_cols:
+            random_crop_length = randint(img_rows // 4, img_rows // 2)
+        else:
+            random_crop_length = randint(img_cols // 4, img_cols // 2)
+
+        random_crop_row_init = randint(1, img_rows - random_crop_length)
+        random_crop_col_init = randint(1, img_cols - random_crop_length)
+
+        crop_img = np.empty(shape=(random_crop_length, random_crop_length, img_channel), dtype=np.uint8)
+        crop_label = np.empty(shape=(random_crop_length, random_crop_length), dtype=np.uint8)
+
+        crop_img[:, :, :] = img[random_crop_row_init:random_crop_row_init + random_crop_length,
+                                random_crop_col_init:random_crop_col_init + random_crop_length, :]
+        crop_label[:, :] = label[random_crop_row_init:random_crop_row_init + random_crop_length,
+                                 random_crop_col_init:random_crop_col_init + random_crop_length]
+    else:
+        resize_rate = label_rows / img_rows
+        assert resize_rate == label_cols / img_cols
+
+        if img_rows >= img_cols:
+            random_crop_img_length = randint(img_rows // 4, img_rows // 2)
+        else:
+            random_crop_img_length = randint(img_cols // 4, img_cols // 2)
+        random_crop_label_length = random_crop_img_length * resize_rate
+
+        random_crop_img_row_init = randint(1, img_rows - random_crop_img_length)
+        random_crop_img_col_init = randint(1, img_cols - random_crop_img_length)
+
+        random_crop_label_row_init = randint(1, img_rows - random_crop_label_length)
+        random_crop_label_col_init = randint(1, img_cols - random_crop_label_length)
+
+        crop_img = np.empty(shape=(random_crop_img_length, random_crop_img_length, img_channel), dtype=np.uint8)
+        crop_label = np.empty(shape=(random_crop_label_length, random_crop_label_length), dtype=np.uint8)
+
+        crop_img[:, :, :] = img[random_crop_img_row_init:random_crop_img_row_init + random_crop_img_length,
+                                random_crop_img_col_init:random_crop_img_col_init + random_crop_img_length, :]
+        crop_label[:, :] = label[random_crop_label_row_init:random_crop_label_row_init + random_crop_label_length,
+                                 random_crop_label_col_init:random_crop_label_col_init + random_crop_label_length]
+
+    return crop_img, crop_label
+
+
+def random_color_scale(img, alpha_rate=0.2, base_beta=15):
+    """
+    做一个颜色扰动 img = img * alpha + beta
+
+    :param img:
+    :param alpha_rate:
+    :param base_beta:
+    :return:
+    """
+    alpha = uniform(1-alpha_rate, 1+alpha_rate)
+    beta = randint(0-base_beta, base_beta)
+    img = img * alpha + beta
+
+    return img
+
+
+def flip(img, label):
+    img = cv2.flip(img, 1)
+    label = cv2.flip(label, 1)
+
+    return img, label
+
+
+def gridMask(img, rate=0.1):
+    """
+    对图片进行gridmask
+    每行每列各十个 以边均匀十等分 共计10*10个单元块  在每一个单元块内进行遮盖
+    每一单元块其边长 = mask长度、offset偏差和留白
+    长方形没做适配
+    若干次的经验来看，过拟合增大rate，欠拟合缩小rate，但毕竟只是经验值
+
+    :param img:
+    :param rate: mask长度与一单元块边长的比值
+    :return: gridmask后的图像
+    """
+    img_rows, img_cols, img_channel = img.shape
+    fill_img_rows_length = int(img_rows + 0.2 * img_rows)
+    fill_img_cols_length = int(img_cols + 0.2 * img_cols)
+    rows_offset = randint(0, int(0.1 * fill_img_rows_length))
+    cols_offset = randint(0, int(0.1 * fill_img_cols_length))
+    rows_mask_length = int(0.1 * fill_img_rows_length * rate)
+    cols_mask_length = int(0.1 * fill_img_cols_length * rate)
+
+    fill_img = np.zeros((fill_img_rows_length, fill_img_cols_length, img_channel))
+    fill_img[int(0.1 * img_rows):int(0.1 * img_rows) + img_rows,
+             int(0.1 * img_cols):int(0.1 * img_cols) + img_cols] = img
+
+    for width_num in range(10):
+        for length_num in range(10):
+            length_base_patch = int(0.1 * fill_img_rows_length * length_num) + rows_offset
+            width_base_patch = int(0.1 * fill_img_cols_length * width_num) + cols_offset
+            fill_img[length_base_patch:length_base_patch + rows_mask_length,
+                     width_base_patch:width_base_patch + cols_mask_length] = 0
+
+    img = fill_img[int(0.1 * img_rows):int(0.1 * img_rows) + img_rows,
+                   int(0.1 * img_cols):int(0.1 * img_cols) + img_cols]
+
+    return img
+
+
+def get_senses_augmentation(label, points_file_path, img):
+    """
+
+
+    :param label:
+    :param points_file_path:
+    :param img:
+    :return:
+    """
+    face_index_list = [0, 16, 32, 35, 40]
+    left_eye_index_list = [0, 35, 43, 45]
+    right_eye_index_list = [43, 40, 32, 45]
+    nose_index_list = [43, 87, 84, 90]
+    lip_index_list = [8, 49, 24, 16]
+
+    aug_img, aug_label = [], []
+    aug_flag = [0, 0, 0, 0, 0]
+
+    label_rows, label_cols = label.shape
+    img_rows, img_cols, channel = img.shape
+    point_x_resize, point_y_resize = label_rows / img_rows, label_cols / img_cols
+    points = get_point(point_file_path=points_file_path, point_x_resize=point_x_resize, point_y_resize=point_y_resize)
+
+    face_points = extract_index_point(point_list=points, point_index_list=face_index_list)
+    if len(face_points) != 0:
+        face_coordinate = [int(face_points[0][0]), int(face_points[2][0]),
+                           int((face_points[3][1] + face_points[4][1]) / 2),
+                           int(face_points[1][1])]
+        res = check_coordinate(face_coordinate)
+        if res is True:
+            face_img, face_label = get_sense_crop_img_label(img, label, face_coordinate, point_x_resize, point_y_resize)
+            aug_img.append(face_img)
+            aug_label.append(face_label)
+            aug_flag[0] = 1
+
+    left_eye_points = extract_index_point(point_list=points, point_index_list=left_eye_index_list)
+    if len(left_eye_points) != 0:
+        left_eye_coordinate = [int(left_eye_points[0][0]), int(left_eye_points[2][0]), int(left_eye_points[1][1]),
+                               int(left_eye_points[3][1])]
+        res = check_coordinate(left_eye_coordinate)
+        if res is True:
+            left_eye_img, left_eye_label = get_sense_crop_img_label(img, label, left_eye_coordinate, point_x_resize,
+                                                                    point_y_resize)
+            aug_img.append(left_eye_img)
+            aug_label.append(left_eye_label)
+            aug_flag[1] = 1
+
+    right_eye_points = extract_index_point(point_list=points, point_index_list=right_eye_index_list)
+    if len(right_eye_points) != 0:
+        right_eye_coordinate = [int(right_eye_points[0][0]), int(right_eye_points[2][0]), int(right_eye_points[1][1]),
+                                int(right_eye_points[3][1])]
+        res = check_coordinate(right_eye_coordinate)
+        if res is True:
+            right_eye_img, right_eye_label = get_sense_crop_img_label(img, label, right_eye_coordinate, point_x_resize,
+                                                                      point_y_resize)
+            aug_img.append(right_eye_img)
+            aug_label.append(right_eye_label)
+            aug_flag[2] = 1
+
+    nose_points = extract_index_point(point_list=points, point_index_list=nose_index_list)
+    if len(nose_points) != 0:
+        nose_coordinate = [int(nose_points[2][0]), int(nose_points[3][0]), int(nose_points[0][1]),
+                           int(nose_points[1][1])]
+        res = check_coordinate(nose_coordinate)
+        if res is True:
+            nose_img, nose_label = get_sense_crop_img_label(img, label, nose_coordinate, point_x_resize, point_y_resize)
+            aug_img.append(nose_img)
+            aug_label.append(nose_label)
+            aug_flag[3] = 1
+
+    lip_points = extract_index_point(point_list=points, point_index_list=lip_index_list)
+    if len(lip_points) != 0:
+        lip_coordinate = [int(lip_points[0][0]), int(lip_points[2][0]), int(lip_points[1][1]), int(lip_points[3][1])]
+        res = check_coordinate(lip_coordinate)
+        if res is True:
+            lip_img, lip_label = get_sense_crop_img_label(img, label, lip_coordinate, point_x_resize, point_y_resize)
+            aug_img.append(lip_img)
+            aug_label.append(lip_label)
+            aug_flag[4] = 1
+
+    return aug_img, aug_label, aug_flag
+
+
+def get_sense_crop_img_label(img, label, points, point_x_resize, point_y_resize):
+    img = img[int(points[2] / point_y_resize):int(points[3] / point_y_resize),
+              int(points[0] / point_x_resize):int(points[1] / point_x_resize), :]
+    label = label[points[2]:points[3], points[0]:points[1]]
+
+    return img, label
+
+
+def check_coordinate(coordinate):
+    if coordinate[1] <= coordinate[0] or coordinate[3] <= coordinate[2]:
+        return False
+    return True
