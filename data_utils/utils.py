@@ -140,3 +140,30 @@ def clean_val_file(val_file_path, val_type='*.png'):
         val_file_name = (val_file.split('/')[-1]).split('.')[0]
         if '_' in val_file_name:
             os.remove(val_file)
+
+
+def check_file_is_aug(img_file_path_list, label_file_path_list):
+    """
+    对传入的文件是否含有数据增强的文件做一下判断 并传入分别的list中
+
+    :param img_file_path_list:
+    :param label_file_path_list:
+    :return:
+    """
+    print('[INFO] 数据分组')
+    normal_img_file_path_list, normal_label_file_path_list = [], []
+    aug_img_file_path_list, aug_label_file_path_list = [], []
+    for img_file_path, label_file_path in tqdm(zip(img_file_path_list, label_file_path_list),
+                                               total=len(img_file_path_list)):
+        img_file_name = (img_file_path.split('/')[-1]).split('.')[0]
+        label_file_name = (label_file_path.split('/')[-1]).split('.')[0]
+        if img_file_name != label_file_name:
+            break
+        if '_' in img_file_name:
+            aug_img_file_path_list.append(img_file_path)
+            aug_label_file_path_list.append(label_file_path)
+        else:
+            normal_img_file_path_list.append(img_file_path)
+            normal_label_file_path_list.append(label_file_path)
+
+    return normal_img_file_path_list, normal_label_file_path_list, aug_img_file_path_list, aug_label_file_path_list

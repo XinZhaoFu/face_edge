@@ -70,7 +70,7 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
         test_img = test_img / 255.
         test_img_np[0, :, :, :] = test_img[:, :, :]
         test_img_name = (test_file.split('/')[-1]).split('.')[0]
-        # test_img_name = "{:0>5d}".format(int(test_img_name)) + '_nose.png'
+
         test_img_name = img_name_comple + '_' + ex_info + '_' + test_img_name + '.png'
 
         predict_temp = model.predict(test_img_np)
@@ -99,9 +99,9 @@ def main():
     start_time = datetime.datetime.now()
 
     tran_tab = str.maketrans('- :.', '____')
-    img_name_comple = str(start_time).translate(tran_tab)
+    img_name_complement = str(start_time).translate(tran_tab)
 
-    predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, img_name_comple)
+    predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, img_name_complement)
 
     end_time = datetime.datetime.now()
     print('time:\t' + str(end_time - start_time).split('.')[0])

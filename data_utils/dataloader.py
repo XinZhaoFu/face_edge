@@ -4,7 +4,7 @@ from data_utils.data_preprocess import get_img_mask_list
 class Data_Loader_File:
     def __init__(self,
                  batch_size,
-                 data_augmentation=False,
+                 data_augmentation=0,
                  train_file_path='./data/train/',
                  val_file_path='./data/val/'):
         self.batch_size = batch_size

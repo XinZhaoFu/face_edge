@@ -11,9 +11,6 @@ from data_utils.utils import clean_val_file
 np.set_printoptions(threshold=np.inf)
 
 
-val_file_path = './data/val/img/'
-val_file_list = glob(val_file_path + '*.jpg')
-print(len(val_file_list))
-clean_val_file(val_file_path)
-val_file_list = glob(val_file_path + '*.jpg')
-print(len(val_file_list))
+list1, list2 = [1, 2, 3, 4], [1, 2, 3]
+list1.extend(list2[:int(0.5*len(list2))])
+print(list1)

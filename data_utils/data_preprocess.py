@@ -1,9 +1,9 @@
 import tensorflow as tf
 from glob import glob
-from data_utils.utils import check_img_label_list, shuffle_file
+from data_utils.utils import check_img_label_list, shuffle_file, check_file_is_aug
 
 
-def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=False):
+def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=0):
     """
     将图像和标签数据队列处理后以tensor返回
     图像格式为(size, size, 3)
@@ -19,11 +19,6 @@ def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=Fa
     img_path = file_path + 'img/'
     label_path = file_path + 'label/'
 
-    if data_augmentation:
-        print('[INFO] 调用数据增强后的文件')
-        img_path = file_path + 'aug_img/'
-        label_path = file_path + 'aug_label/'
-
     img_file_path_list = glob(img_path + '*.jpg')
     label_file_path_list = glob(label_path + '*.png')
     assert len(img_file_path_list) == len(label_file_path_list)
@@ -36,6 +31,19 @@ def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=Fa
     """
     img_file_path_list.sort()
     label_file_path_list.sort()
+
+    """
+    对list内文件的文件名进行判断  标准数据的命名不带'_'  增强数据含'_'  
+    eg： img：123.jpg  label：123.png      aug_img：123_nose.jpg  aug_label：123_nose.png
+    而后根据data_augmentation的比例 向标准数据队列中注入一定比例的增强数据
+    """
+    if 0 < data_augmentation <= 1:
+        img_file_path_list, label_file_path_list, aug_img_file_path_list, aug_label_file_path_list\
+            = check_file_is_aug(img_file_path_list, label_file_path_list)
+
+        aug_img_file_path_list, aug_label_file_path_list = shuffle_file(aug_img_file_path_list, aug_label_file_path_list)
+        img_file_path_list.extend(aug_img_file_path_list[:int(data_augmentation*len(aug_img_file_path_list))])
+        label_file_path_list.extend(aug_label_file_path_list[:int(data_augmentation * len(aug_label_file_path_list))])
 
     # 截取部分文件
     if file_number > 0:

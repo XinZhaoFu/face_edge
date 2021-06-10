@@ -70,9 +70,9 @@ def parseArgs():
                         default=False, type=bool)
     parser.add_argument('--data_augmentation',
                         dest='data_augmentation',
-                        help='data_augmentation type is boolean',
-                        default=False,
-                        type=bool)
+                        help='data_augmentation type is float, range is 0 ~ 1',
+                        default=0,
+                        type=float)
     args = parser.parse_args()
     return args
 
@@ -84,7 +84,7 @@ class train:
                  epochs=0,
                  load_train_file_number=0,
                  load_val_file_number=0,
-                 data_augmentation=False,
+                 data_augmentation=0,
                  augmentation_rate=1,
                  erase_rate=0.1,
                  learning_rate=0,
