@@ -126,3 +126,18 @@ def u2net_bce_loss():
         return tf.reduce_sum(loss)
     return bce_loss_fixed
 
+def dice_bce_loss():
+    bce = tf.keras.losses.binary_crossentropy
+    smooth = 1.0
+    def dice_bce_loss_fixed(y_true, y_pred):
+        y_true_sum = tf.reduce_sum(y_true)
+        y_pred_sum = tf.reduce_sum(y_pred)
+        intersection = tf.reduce_sum(y_true * y_pred)
+
+        dice_loss = 1 - (2.0 * intersection + smooth) / (y_true_sum + y_pred_sum + smooth)
+        bce_loss = bce(y_true, y_pred)
+        loss = dice_loss * 0.5 + bce_loss * 0.5
+
+        return loss
+    return dice_bce_loss_fixed
+

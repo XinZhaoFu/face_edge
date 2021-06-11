@@ -78,6 +78,8 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
         predict_img = np.empty(shape=(512, 512), dtype=np.uint8)
 
         predict_img[:, :] = predict_temp[0, :, :, 0] * 255
+        (rows, cols) = np.where(predict_img > 128)
+        predict_img[rows, cols] = 255
 
         # _, predict_img = cv2.threshold(predict_img, 50, 255, cv2.THRESH_BINARY)
         cv2.imwrite(predict_save_path + test_img_name, predict_img)
@@ -89,7 +91,8 @@ def main():
     # ex_info = 'detail_con_unet_face_edge_focal'
     # ex_info = 'bisev2_mix_loss'
     # ex_info = 'u2net_mix_loss'
-    ex_info = 'u2net_16_64'
+    # ex_info = 'u2net_16_64'
+    ex_info = 'u2net_16_64_bin'
 
     checkpoint_save_path = './checkpoint/' + ex_info + '.ckpt'
 

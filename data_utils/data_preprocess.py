@@ -37,10 +37,9 @@ def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=0)
     eg： img：123.jpg  label：123.png      aug_img：123_nose.jpg  aug_label：123_nose.png
     而后根据data_augmentation的比例 向标准数据队列中注入一定比例的增强数据
     """
+    img_file_path_list, label_file_path_list, aug_img_file_path_list, aug_label_file_path_list \
+        = check_file_is_aug(img_file_path_list, label_file_path_list)
     if 0 < data_augmentation <= 1:
-        img_file_path_list, label_file_path_list, aug_img_file_path_list, aug_label_file_path_list\
-            = check_file_is_aug(img_file_path_list, label_file_path_list)
-
         aug_img_file_path_list, aug_label_file_path_list = shuffle_file(aug_img_file_path_list, aug_label_file_path_list)
         img_file_path_list.extend(aug_img_file_path_list[:int(data_augmentation*len(aug_img_file_path_list))])
         label_file_path_list.extend(aug_label_file_path_list[:int(data_augmentation * len(aug_label_file_path_list))])

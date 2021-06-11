@@ -14,7 +14,8 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import setproctitle
 import numpy as np
-from loss.loss import binary_focal_loss, dice_loss, mix_dice_focal_loss, binary_crossentropy_weight, u2net_bce_loss
+from loss.loss import binary_focal_loss, dice_loss, mix_dice_focal_loss, binary_crossentropy_weight, \
+    u2net_bce_loss, dice_bce_loss
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
@@ -102,6 +103,8 @@ class train:
         self.augmentation_rate = augmentation_rate
         self.learning_rate = learning_rate
         self.checkpoint_save_path = checkpoint_save_path + ex_info + '.ckpt'
+        self.checkpoint_input_path = './checkpoint/' + 'u2net_mix_loss' + '.ckpt'
+        # self.checkpoint_input_path = self.checkpoint_save_path
 
         self.strategy = tf.distribute.MirroredStrategy()
         print('[INFO] 目前使用gpu数量为: {}'.format(self.strategy.num_replicas_in_sync))
@@ -135,7 +138,7 @@ class train:
             #              end_activation='sigmoid')
             # model = BisenetV2(detail_filters=32, aggregation_filters=32, num_class=1, final_act='sigmoid')
             model = U2Net(rsu_middle_filters=16,
-                          rsu_out_filters=64,
+                          rsu_out_filters=32,
                           num_class=1,
                           end_activation='sigmoid',
                           only_output=True)
@@ -153,19 +156,19 @@ class train:
                 metrics=[tf.keras.metrics.Precision()]
             )
 
-            if os.path.exists(self.checkpoint_save_path + '.index') and self.load_weights:
+            if os.path.exists(self.checkpoint_input_path + '.index') and self.load_weights:
                 print("[INFO] -------------------------------------------------")
                 print("[INFO] -----------------loading weights-----------------")
                 print("[INFO] -------------------------------------------------")
-                model.load_weights(self.checkpoint_save_path)
+                model.load_weights(self.checkpoint_input_path)
 
             checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
                 filepath=self.checkpoint_save_path,
-                monitor='loss',
+                monitor='val_loss',
                 save_weights_only=True,
                 save_best_only=True,
                 mode='auto',
-                save_freq=10)
+                save_freq='epoch')
 
         history = model.fit(
             self.train_datasets,
@@ -194,8 +197,9 @@ def train_init():
     # ex_info = 'dense_unet_df32sf16_mix_loss'
     # ex_info = 'detail_con_unet_face_edge_focal'
     # ex_info = 'bisev2_mix_loss'
-    # ex_info = 'u2net_mix_loss'
-    ex_info = 'u2net_16_64'
+    ex_info = 'u2net_dice'
+    # ex_info = 'u2net_16_64_bce_dice'
+    # ex_info = 'u2net_16_64'
     # ex_info = 'u2net_mix_loss_mix_precision'
     print('[INFO] 实验名称：' + ex_info)
 

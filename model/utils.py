@@ -13,7 +13,8 @@ class Con_Bn_Act(Model):
                  activation=None,
                  dilation_rate=1,
                  name=None,
-                 kernel_regularizer=False):
+                 kernel_regularizer=False,
+                 train_able=True):
         super(Con_Bn_Act, self).__init__()
         self.kernel_regularizer = kernel_regularizer
         self.filters = filters
@@ -23,6 +24,7 @@ class Con_Bn_Act(Model):
         self.activation = activation
         self.dilation_rate = dilation_rate
         self.block_name = name
+        self.train_able = train_able
 
         if activation is None:
             self.activation = 'relu'
@@ -43,6 +45,8 @@ class Con_Bn_Act(Model):
                           name=self.block_name,
                           kernel_regularizer=self.con_regularizer,
                           kernel_initializer='glorot_uniform')
+        if self.train_able is False:
+            self.con.trainable = False
         self.bn = BatchNormalization()
         if self.activation is not None:
             self.act = Activation(self.activation)
