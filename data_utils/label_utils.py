@@ -571,6 +571,30 @@ def flip(img, label):
     return img, label
 
 
+def cutout(img, mask_rate=0.3):
+    """
+    对图片进行cutout 遮盖位置随机
+    遮盖长度为空时用默认值
+    过拟合增大，欠拟合缩小，自行调节
+    添加遮盖前 对图像一圈进行0填充
+
+    :param img:
+    :param mask_rate:
+    :return:cutout后的图像
+    """
+    img_rows, img_cols, img_channel = img.shape
+    mask_rows = int(img_rows * mask_rate)
+    mask_cols = int(img_cols * mask_rate)
+    region_x, region_y = randint(0, int(img_rows + mask_rows)), randint(0, int(img_cols + mask_cols))
+
+    fill_img = np.zeros((int(img_rows + mask_rows * 2), int(img_cols + mask_cols * 2), img_channel))
+    fill_img[int(mask_rows):int(mask_rows + img_rows), int(mask_cols):int(mask_cols + img_cols)] = img
+    fill_img[region_x:int(region_x + mask_rows), region_y:int(region_y + mask_cols)] = 0
+    img = fill_img[int(mask_rows):int(mask_rows + img_rows), int(mask_cols):int(mask_cols + img_cols)]
+
+    return img
+
+
 def gridMask(img, rate=0.1):
     """
     对图片进行gridmask
@@ -610,7 +634,7 @@ def gridMask(img, rate=0.1):
 
 def get_senses_augmentation(label, points_file_path, img):
     """
-
+    获得五官局部的扩增图片
 
     :param label:
     :param points_file_path:
@@ -703,3 +727,11 @@ def check_coordinate(coordinate):
     if coordinate[1] <= coordinate[0] or coordinate[3] <= coordinate[2]:
         return False
     return True
+
+
+def random_filling(img, label):
+    img_rows, img_cols, _ = img.shape
+
+    filling_rows = randint(img_rows*1.2, img_rows*3)
+    filling_cols = randint(img_cols*1.2, img_cols*3)
+    region_row, region_col = randint(0, filling_rows-img_rows), randint(0, filling_cols-img_cols)

@@ -3,7 +3,8 @@ import numpy as np
 import cv2
 import datetime
 from tqdm import tqdm
-from label_utils import get_contour_pupil_label, get_nose_label, get_senses_augmentation
+from label_utils import get_contour_pupil_label, get_nose_label, get_senses_augmentation, gridMask, cutout, \
+    random_color_scale
 
 """
 label class         name
@@ -202,9 +203,12 @@ def add_contour_nose_label(img_path,
         cv2.imwrite(save_label_path + label_name + '.png', con_label)
 
         if is_augmentation:
+            # get_senses_augmentation
             cv2.imwrite(save_img_path + img_name + '.jpg', img)
             aug_name_list = ['_face', '_left_eye', '_right_eye', '_nose', '_lip']
-            aug_img, aug_label, aug_flag = get_senses_augmentation(label=con_label, points_file_path=nose_point_path, img=img)
+            aug_img, aug_label, aug_flag = get_senses_augmentation(label=con_label,
+                                                                   points_file_path=nose_point_path,
+                                                                   img=img)
 
             aug_index = 0
             for index, aug_name in enumerate(aug_name_list):
@@ -212,6 +216,25 @@ def add_contour_nose_label(img_path,
                     cv2.imwrite(save_img_path + img_name + aug_name + '.jpg', aug_img[aug_index])
                     cv2.imwrite(save_label_path + label_name + aug_name + '.png', aug_label[aug_index])
                     aug_index += 1
+
+            # gridmask
+            gridmask_num = 1
+            for index in range(gridmask_num):
+                img = gridMask(img, rate=0.1)
+                cv2.imwrite(save_img_path + img_name + '_gridmask_' + str(index) + '.jpg', img)
+                cv2.imwrite(save_label_path + label_name + '_gridmask_' + str(index) + '.png', con_label)
+
+            # cutout
+            cutout_num = 1
+            for index in range(cutout_num):
+                img = cutout(img, mask_rate=0.3)
+                cv2.imwrite(save_img_path + img_name + '_cutout_' + str(index) + '.jpg', img)
+                cv2.imwrite(save_label_path + label_name + '_cutout_' + str(index) + '.png', con_label)
+
+            # random_color_scale
+            img = random_color_scale(save_img_path, alpha_rate=0.2, base_beta=15)
+            cv2.imwrite(save_img_path + img_name + '_random_color.jpg', img)
+            cv2.imwrite(save_label_path + label_name + '_random_color.png', con_label)
 
 
 def main(is_get_semantic_label=True, is_augmentation=False):

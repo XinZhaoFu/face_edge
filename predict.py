@@ -17,7 +17,6 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 np.set_printoptions(threshold=np.inf)
 
-
 gpus = tf.config.list_physical_devices('GPU')
 if len(gpus) > 0:
     tf.config.experimental.set_memory_growth(gpus[0], True)
@@ -36,7 +35,7 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
     print('[info]模型加载 图片加载')
     # 加载模型
     model = U2Net(rsu_middle_filters=16,
-                  rsu_out_filters=64,
+                  rsu_out_filters=32,
                   num_class=1,
                   end_activation='sigmoid',
                   only_output=True)
@@ -59,13 +58,21 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
                   metrics=['accuracy'])
     model.load_weights(checkpoint_save_path)
 
-    test_file_path_list = glob.glob(test_file_path+'*.jpg')
+    test_file_path_list = glob.glob(test_file_path + '*.jpg')
     print(len(test_file_path_list))
     test_img_np = np.empty(shape=(1, 512, 512, 3), dtype=np.float32)
 
     test_file_path_list = tqdm(test_file_path_list)
     for test_file in test_file_path_list:
         test_img = cv2.imread(test_file)
+        test_img_rows, test_img_cols, test_img_channel = test_img.shape
+        if (test_img_rows / test_img_cols) > 1.1:
+            test_img = test_img[:test_img_cols, :, :]
+            test_img_rows = test_img_cols
+        if (test_img_rows / test_img_cols) < 0.9:
+            test_img = test_img[:, :test_img_rows, :]
+            test_img_cols = test_img_rows
+
         test_img = cv2.resize(test_img, dsize=(512, 512))
         test_img = test_img / 255.
         test_img_np[0, :, :, :] = test_img[:, :, :]
@@ -78,8 +85,14 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
         predict_img = np.empty(shape=(512, 512), dtype=np.uint8)
 
         predict_img[:, :] = predict_temp[0, :, :, 0] * 255
-        (rows, cols) = np.where(predict_img > 128)
-        predict_img[rows, cols] = 255
+        # (rows, cols) = np.where(predict_img > 128)
+        # predict_img[rows, cols] = 255
+
+        # for _ in range(20):
+        #     predict_img = cv2.resize(predict_img, dsize=(test_img_rows * 8, test_img_cols * 8),
+        #                              interpolation=cv2.INTER_AREA)
+        #     predict_img = cv2.resize(predict_img, dsize=(test_img_rows, test_img_cols),
+        #                              interpolation=cv2.INTER_AREA)
 
         # _, predict_img = cv2.threshold(predict_img, 50, 255, cv2.THRESH_BINARY)
         cv2.imwrite(predict_save_path + test_img_name, predict_img)
@@ -92,12 +105,13 @@ def main():
     # ex_info = 'bisev2_mix_loss'
     # ex_info = 'u2net_mix_loss'
     # ex_info = 'u2net_16_64'
-    ex_info = 'u2net_16_64_bin'
+    # ex_info = 'u2net_16_64_bin'
+    ex_info = 'u2net_dice'
 
     checkpoint_save_path = './checkpoint/' + ex_info + '.ckpt'
 
-    test_file_path = './data/test/'
-    predict_save_path = './data/predict/'
+    test_file_path = './data/res/sample/'
+    predict_save_path = './data/res/predict/'
 
     start_time = datetime.datetime.now()
 

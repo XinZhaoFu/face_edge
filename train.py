@@ -81,7 +81,7 @@ def parseArgs():
 class train:
     def __init__(self,
                  load_weights=False,
-                 batch_size=8,
+                 batch_size=128,
                  epochs=0,
                  load_train_file_number=0,
                  load_val_file_number=0,
@@ -103,7 +103,7 @@ class train:
         self.augmentation_rate = augmentation_rate
         self.learning_rate = learning_rate
         self.checkpoint_save_path = checkpoint_save_path + ex_info + '.ckpt'
-        self.checkpoint_input_path = './checkpoint/' + 'u2net_mix_loss' + '.ckpt'
+        self.checkpoint_input_path = './checkpoint/' + 'u2net_dice_02aug10000' + '.ckpt'
         # self.checkpoint_input_path = self.checkpoint_save_path
 
         self.strategy = tf.distribute.MirroredStrategy()
@@ -197,10 +197,11 @@ def train_init():
     # ex_info = 'dense_unet_df32sf16_mix_loss'
     # ex_info = 'detail_con_unet_face_edge_focal'
     # ex_info = 'bisev2_mix_loss'
-    ex_info = 'u2net_dice'
+    # ex_info = 'u2net_dice'
     # ex_info = 'u2net_16_64_bce_dice'
     # ex_info = 'u2net_16_64'
     # ex_info = 'u2net_mix_loss_mix_precision'
+    ex_info = 'u2net_dice_02aug30000'
     print('[INFO] 实验名称：' + ex_info)
 
     start_time = datetime.datetime.now()
