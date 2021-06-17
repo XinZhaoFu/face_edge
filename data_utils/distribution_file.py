@@ -40,7 +40,8 @@ def img_label_distribution(ori_img_file_path,
                            distribution_img_file_path=val_img_file_path,
                            distribution_label_file_path=val_label_file_path,
                            is_recreate_dir=is_recreate_dir,
-                           resize=resize)
+                           resize=resize,
+                           is_del_aug=True)
 
 
 def celeb_label_distribution():

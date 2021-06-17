@@ -28,10 +28,12 @@ def distribution_img_label(distribution_img_file_list,
                            distribution_img_file_path,
                            distribution_label_file_path,
                            is_recreate_dir=False,
-                           resize=0):
+                           resize=512,
+                           is_del_aug=False):
     """
     将img和label从一文件夹转至其他位置
 
+    :param is_del_aug:
     :param resize:
     :param is_recreate_dir:
     :param distribution_img_file_list:
@@ -50,12 +52,15 @@ def distribution_img_label(distribution_img_file_list,
                                                total=len(distribution_img_file_list)):
         img_name = img_file_path.split('/')[-1]
         label_name = label_file_path.split('/')[-1]
+        if is_del_aug and '_' in img_name:
+            continue
+
         if resize == 0:
             shutil.copyfile(img_file_path, distribution_img_file_path + img_name)
             shutil.copyfile(label_file_path, distribution_label_file_path + label_name)
         else:
             img = cv2.imread(img_file_path)
-            img = cv2.resize(img, dsize=(resize, resize))
+            img = cv2.resize(img, dsize=(resize, resize), interpolation=cv2.INTER_CUBIC)
             label = cv2.imread(label_file_path)
             label = cv2.resize(label, dsize=(resize, resize), interpolation=cv2.INTER_NEAREST)
 

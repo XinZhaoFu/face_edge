@@ -4,7 +4,7 @@ import cv2
 import datetime
 from tqdm import tqdm
 from label_utils import get_contour_pupil_label, get_nose_label, get_senses_augmentation, gridMask, cutout, \
-    random_color_scale
+    random_color_scale, random_filling
 
 """
 label class         name
@@ -231,13 +231,13 @@ def add_contour_nose_label(img_path,
                 cv2.imwrite(save_img_path + img_name + '_cutout_' + str(index) + '.jpg', img)
                 cv2.imwrite(save_label_path + label_name + '_cutout_' + str(index) + '.png', con_label)
 
-            # random_color_scale
-            img = random_color_scale(save_img_path, alpha_rate=0.2, base_beta=15)
-            cv2.imwrite(save_img_path + img_name + '_random_color.jpg', img)
-            cv2.imwrite(save_label_path + label_name + '_random_color.png', con_label)
+            # random_filling
+            img, label = random_filling(img, con_label)
+            cv2.imwrite(save_img_path + img_name + '_random_filling.jpg', img)
+            cv2.imwrite(save_label_path + label_name + '_random_filling.png', label)
 
 
-def main(is_get_semantic_label=True, is_augmentation=False):
+def main(is_get_semantic_label=True, is_augmentation=True):
     save_semantic_path = '../data/celeb_semantic_label/'
     save_label_path = '../data/celeb_edge/'
     save_img_path = '../data/celeb_aug_img/'

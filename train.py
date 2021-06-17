@@ -103,8 +103,9 @@ class train:
         self.augmentation_rate = augmentation_rate
         self.learning_rate = learning_rate
         self.checkpoint_save_path = checkpoint_save_path + ex_info + '.ckpt'
-        self.checkpoint_input_path = './checkpoint/' + 'u2net_dice_02aug10000' + '.ckpt'
-        # self.checkpoint_input_path = self.checkpoint_save_path
+        # self.checkpoint_input_path = './checkpoint/' + 'u2net_dice_02aug30000' + '.ckpt'
+        self.checkpoint_input_path = self.checkpoint_save_path
+        print('[INFO] checkpoint_input_path:\t' + self.checkpoint_input_path)
 
         self.strategy = tf.distribute.MirroredStrategy()
         print('[INFO] 目前使用gpu数量为: {}'.format(self.strategy.num_replicas_in_sync))
@@ -152,7 +153,7 @@ class train:
 
             model.compile(
                 optimizer=optimizer,
-                loss=dice_loss(),
+                loss=tf.keras.losses.BinaryCrossentropy(),
                 metrics=[tf.keras.metrics.Precision()]
             )
 
@@ -164,7 +165,7 @@ class train:
 
             checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
                 filepath=self.checkpoint_save_path,
-                monitor='val_loss',
+                monitor='val_precision',
                 save_weights_only=True,
                 save_best_only=True,
                 mode='auto',
@@ -201,7 +202,9 @@ def train_init():
     # ex_info = 'u2net_16_64_bce_dice'
     # ex_info = 'u2net_16_64'
     # ex_info = 'u2net_mix_loss_mix_precision'
-    ex_info = 'u2net_dice_02aug30000'
+    ex_info = 'u2net_bin_02aug10000'
+    # ex_info = 'detail_con_unet_face_edge'
+
     print('[INFO] 实验名称：' + ex_info)
 
     start_time = datetime.datetime.now()

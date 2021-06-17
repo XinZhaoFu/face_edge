@@ -213,7 +213,7 @@ def get_nose_point(point_file_path, point_x_resize, point_y_resize, new_point1_i
     return nose_point_list
 
 
-def get_point(point_file_path, point_x_resize, point_y_resize):
+def get_point(point_file_path, point_x_resize=1, point_y_resize=1):
     """
     读取坐标点 如有需要则进行放缩
 
@@ -585,12 +585,12 @@ def cutout(img, mask_rate=0.3):
     img_rows, img_cols, img_channel = img.shape
     mask_rows = int(img_rows * mask_rate)
     mask_cols = int(img_cols * mask_rate)
-    region_x, region_y = randint(0, int(img_rows + mask_rows)), randint(0, int(img_cols + mask_cols))
+    region_x, region_y = randint(0, img_rows + mask_rows), randint(0, img_cols + mask_cols)
 
-    fill_img = np.zeros((int(img_rows + mask_rows * 2), int(img_cols + mask_cols * 2), img_channel))
-    fill_img[int(mask_rows):int(mask_rows + img_rows), int(mask_cols):int(mask_cols + img_cols)] = img
-    fill_img[region_x:int(region_x + mask_rows), region_y:int(region_y + mask_cols)] = 0
-    img = fill_img[int(mask_rows):int(mask_rows + img_rows), int(mask_cols):int(mask_cols + img_cols)]
+    fill_img = np.zeros((img_rows + mask_rows * 2, img_cols + mask_cols * 2, img_channel))
+    fill_img[mask_rows:mask_rows + img_rows, mask_cols:mask_cols + img_cols] = img
+    fill_img[region_x:region_x + mask_rows, region_y:region_y + mask_cols] = 0
+    img = fill_img[mask_rows:mask_rows + img_rows, mask_cols:mask_cols + img_cols]
 
     return img
 
@@ -730,8 +730,35 @@ def check_coordinate(coordinate):
 
 
 def random_filling(img, label):
-    img_rows, img_cols, _ = img.shape
+    """
+    目标是在图片周围填充一圈空值  实现方式是生成一个大的空值图 找一随机位置将原图填进去
 
-    filling_rows = randint(img_rows*1.2, img_rows*3)
-    filling_cols = randint(img_cols*1.2, img_cols*3)
-    region_row, region_col = randint(0, filling_rows-img_rows), randint(0, filling_cols-img_cols)
+    :param img:
+    :param label:
+    :return:
+    """
+    img_rows, img_cols, img_channel = img.shape
+    label_rows, label_cols = label.shape
+    rows_rate = label_rows / img_rows
+    cols_rate = label_cols / img_cols
+
+    filling_img_rows = randint(int(img_rows*1.2), img_rows*2)
+    filling_img_cols = randint(int(img_cols*1.2), img_cols*2)
+    filling_label_rows = int(filling_img_rows * rows_rate)
+    filling_label_cols = int(filling_img_cols * cols_rate)
+
+    img_region_row, img_region_col = randint(0, filling_img_rows-img_rows), randint(0, filling_img_cols-img_cols)
+    label_region_row, label_region_col = int(img_region_row * rows_rate), int(img_region_col * cols_rate)
+
+    filling_img = np.zeros(shape=(filling_img_rows, filling_img_cols, img_channel))
+    filling_label = np.zeros(shape=(filling_label_rows, filling_label_cols))
+
+    filling_img[img_region_row:img_region_row+img_rows, img_region_col:img_region_col+img_cols] = img
+    filling_label[label_region_row:label_region_row+label_rows, label_region_col:label_region_col+label_cols] = label
+
+    filling_img = cv2.resize(filling_img, dsize=(img_rows, img_cols))
+    filling_label = cv2.resize(filling_label, dsize=(label_rows, label_cols))
+
+    return filling_img, filling_label
+
+
