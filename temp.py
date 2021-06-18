@@ -19,11 +19,15 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import UnivariateSpline
 
 
-img = cv2.imread('./data/temp/celeb_ori_img/1.jpg')
+img = cv2.imread('./data/res/sample/demo0.jpg')
+cv2.imwrite('./data/res/sample/demo0.jpg', img)
 
-points = get_point(point_file_path='./data/temp/celeb_106points/1.txt')
-
-# x, y = [], []
+#
+# img = cv2.imread('./data/temp/celeb_ori_img/1.jpg')
+#
+# points = get_point(point_file_path='./data/temp/celeb_106points/1.txt')
+#
+# # x, y = [], []
 # for point_x, point_y in points[:32]:
 #     if len(x) > 0 and point_x < x[-1]:
 #         point_x = x[-1]
@@ -34,24 +38,24 @@ points = get_point(point_file_path='./data/temp/celeb_106points/1.txt')
 # fit_point = np.empty(shape=(len(fit_point_x), 2), dtype=np.int32)
 # fit_point[:, 0] = fit_point_x
 # fit_point[:, 1] = fit_point_y
-
-
-def get_target_points(points, index_list):
-    target_points = []
-    for index in index_list:
-        target_points.append(points[index])
-
-    return target_points
-
-
-left_eye_brow_points = get_target_points(points, [33, 34, 35, 36, 37, 67, 66, 65, 64, 33])
-right_eye_brow_points = get_target_points(points, [38, 39, 40, 41, 42, 71, 70, 69, 68, 38])
-left_eye_points = get_target_points(points, [52, 53, 72, 54, 55])
-
-img = draw_line(img, left_eye_brow_points, (255, 255, 255), 1)
-img = draw_line(img, points[38:43], (255, 255, 255), 1)
-img = draw_line(img, points[84:91], (255, 255, 255), 1)
-img = draw_line(img, points[:33], (255, 255, 255), 1)
+#
+#
+# def get_target_points(points, index_list):
+#     target_points = []
+#     for index in index_list:
+#         target_points.append(points[index])
+#
+#     return target_points
+#
+#
+# left_eye_brow_points = get_target_points(points, [33, 34, 35, 36, 37, 67, 66, 65, 64, 33])
+# right_eye_brow_points = get_target_points(points, [38, 39, 40, 41, 42, 71, 70, 69, 68, 38])
+# left_eye_points = get_target_points(points, [52, 53, 72, 54, 55])
+#
+# img = draw_line(img, left_eye_brow_points, (255, 255, 255), 1)
+# img = draw_line(img, points[38:43], (255, 255, 255), 1)
+# img = draw_line(img, points[84:91], (255, 255, 255), 1)
+# img = draw_line(img, points[:33], (255, 255, 255), 1)
 
 # for index in range(1, len(point_x_list)):
 #     point1 = (int(point_x_list[index-1]), int(point_y_list[index-1]))
