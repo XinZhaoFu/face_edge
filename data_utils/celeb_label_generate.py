@@ -238,21 +238,21 @@ def add_contour_nose_label(img_path,
 
 
 def main(is_get_semantic_label=True, is_augmentation=True):
-    save_semantic_path = '../data/celeb_semantic_label/'
-    save_label_path = '../data/celeb_edge/'
-    save_img_path = '../data/celeb_aug_img/'
-    contour_point_file_path = '../data/celeb_eye_contour/'
-    nose_point_file_path = '../data/celeb_106points/'
-    img_path = '../data/celeb_ori_img/'
-    label_path = '../data/celeb_ori_label/'
+    # save_semantic_path = '../data/celeb_semantic_label/'
+    # save_label_path = '../data/celeb_edge/'
+    # save_img_path = '../data/celeb_aug_img/'
+    # contour_point_file_path = '../data/celeb_eye_contour/'
+    # nose_point_file_path = '../data/celeb_106points/'
+    # img_path = '../data/celeb_ori_img/'
+    # label_path = '../data/celeb_ori_label/'
 
-    # save_semantic_path = '../data/temp/celeb_semantic_label/'
-    # save_label_path = '../data/temp/celeb_edge/'
-    # save_img_path = '../data/temp/celeb_aug_img/'
-    # contour_point_file_path = '../data/temp/celeb_eye_contour/'
-    # nose_point_file_path = '../data/temp/celeb_106points/'
-    # img_path = '../data/temp/celeb_ori_img/'
-    # label_path = '../data/temp/celeb_ori_label/'
+    save_semantic_path = '../data/temp/celeb_semantic_label/'
+    save_label_path = '../data/temp/celeb_edge/'
+    save_img_path = '../data/temp/celeb_aug_img/'
+    contour_point_file_path = '../data/temp/celeb_eye_contour/'
+    nose_point_file_path = '../data/temp/celeb_106points/'
+    img_path = '../data/temp/celeb_ori_img/'
+    label_path = '../data/temp/celeb_ori_label/'
 
     if is_get_semantic_label is True:
         get_semantic_label(label_path, save_semantic_path)

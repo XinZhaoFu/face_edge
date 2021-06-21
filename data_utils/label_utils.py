@@ -757,7 +757,7 @@ def random_filling(img, label):
     filling_label[label_region_row:label_region_row+label_rows, label_region_col:label_region_col+label_cols] = label
 
     filling_img = cv2.resize(filling_img, dsize=(img_rows, img_cols))
-    filling_label = cv2.resize(filling_label, dsize=(label_rows, label_cols))
+    filling_label = cv2.resize(filling_label, dsize=(label_rows, label_cols), interpolation=cv2.INTER_NEAREST)
 
     return filling_img, filling_label
 
