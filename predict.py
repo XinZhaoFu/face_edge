@@ -175,7 +175,7 @@ def main():
     checkpoint_save_path = './checkpoint/' + ex_info + '.ckpt'
 
     test_file_path = './data/res/sample/'
-    predict_save_path = './data/res/predict/'
+    predict_save_path = './data/res/predict1/'
 
     start_time = datetime.datetime.now()
 

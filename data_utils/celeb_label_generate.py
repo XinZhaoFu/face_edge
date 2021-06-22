@@ -4,7 +4,8 @@ import cv2
 import datetime
 from tqdm import tqdm
 from label_utils import get_contour_pupil_label, get_nose_label, get_senses_augmentation, gridMask, cutout, \
-    random_color_scale, random_filling
+    random_color_scale, random_filling, random_crop
+from utils import recreate_dir
 
 """
 label class         name
@@ -203,56 +204,64 @@ def add_contour_nose_label(img_path,
         cv2.imwrite(save_label_path + label_name + '.png', con_label)
 
         if is_augmentation:
-            # get_senses_augmentation
             cv2.imwrite(save_img_path + img_name + '.jpg', img)
-            aug_name_list = ['_face', '_left_eye', '_right_eye', '_nose', '_lip']
-            aug_img, aug_label, aug_flag = get_senses_augmentation(label=con_label,
-                                                                   points_file_path=nose_point_path,
-                                                                   img=img)
 
-            aug_index = 0
-            for index, aug_name in enumerate(aug_name_list):
-                if aug_flag[index] == 1:
-                    cv2.imwrite(save_img_path + img_name + aug_name + '.jpg', aug_img[aug_index])
-                    cv2.imwrite(save_label_path + label_name + aug_name + '.png', aug_label[aug_index])
-                    aug_index += 1
+            # get_senses_augmentation
+            # aug_name_list = ['_face', '_left_eye', '_right_eye', '_nose', '_lip']
+            # aug_img, aug_label, aug_flag = get_senses_augmentation(label=con_label,
+            #                                                        points_file_path=nose_point_path,
+            #                                                        img=img)
+            # aug_index = 0
+            # for index, aug_name in enumerate(aug_name_list):
+            #     if aug_flag[index] == 1:
+            #         cv2.imwrite(save_img_path + img_name + aug_name + '.jpg', aug_img[aug_index])
+            #         cv2.imwrite(save_label_path + label_name + aug_name + '.png', aug_label[aug_index])
+            #         aug_index += 1
+
+            # random_crop
+            crop_img, crop_label = random_crop(img, con_label)
+            cv2.imwrite(save_img_path + img_name + '_random_crop.jpg', crop_img)
+            cv2.imwrite(save_label_path + label_name + '_random_crop.png', crop_label)
 
             # gridmask
             gridmask_num = 1
             for index in range(gridmask_num):
-                img = gridMask(img, rate=0.1)
-                cv2.imwrite(save_img_path + img_name + '_gridmask_' + str(index) + '.jpg', img)
+                grid_mask_img = gridMask(img, rate=0.1)
+                cv2.imwrite(save_img_path + img_name + '_gridmask_' + str(index) + '.jpg', grid_mask_img)
                 cv2.imwrite(save_label_path + label_name + '_gridmask_' + str(index) + '.png', con_label)
 
             # cutout
             cutout_num = 1
             for index in range(cutout_num):
-                img = cutout(img, mask_rate=0.3)
-                cv2.imwrite(save_img_path + img_name + '_cutout_' + str(index) + '.jpg', img)
+                cutout_img = cutout(img, mask_rate=0.3)
+                cv2.imwrite(save_img_path + img_name + '_cutout_' + str(index) + '.jpg', cutout_img)
                 cv2.imwrite(save_label_path + label_name + '_cutout_' + str(index) + '.png', con_label)
 
             # random_filling
-            img, label = random_filling(img, con_label)
-            cv2.imwrite(save_img_path + img_name + '_random_filling.jpg', img)
-            cv2.imwrite(save_label_path + label_name + '_random_filling.png', label)
+            filling_img, filling_label = random_filling(img, con_label)
+            cv2.imwrite(save_img_path + img_name + '_random_filling.jpg', filling_img)
+            cv2.imwrite(save_label_path + label_name + '_random_filling.png', filling_label)
 
 
 def main(is_get_semantic_label=True, is_augmentation=True):
-    # save_semantic_path = '../data/celeb_semantic_label/'
-    # save_label_path = '../data/celeb_edge/'
-    # save_img_path = '../data/celeb_aug_img/'
-    # contour_point_file_path = '../data/celeb_eye_contour/'
-    # nose_point_file_path = '../data/celeb_106points/'
-    # img_path = '../data/celeb_ori_img/'
-    # label_path = '../data/celeb_ori_label/'
+    save_semantic_path = '../data/celeb_semantic_label/'
+    save_label_path = '../data/celeb_edge/'
+    save_img_path = '../data/celeb_aug_img/'
+    contour_point_file_path = '../data/celeb_eye_contour/'
+    nose_point_file_path = '../data/celeb_106points/'
+    img_path = '../data/celeb_ori_img/'
+    label_path = '../data/celeb_ori_label/'
 
-    save_semantic_path = '../data/temp/celeb_semantic_label/'
-    save_label_path = '../data/temp/celeb_edge/'
-    save_img_path = '../data/temp/celeb_aug_img/'
-    contour_point_file_path = '../data/temp/celeb_eye_contour/'
-    nose_point_file_path = '../data/temp/celeb_106points/'
-    img_path = '../data/temp/celeb_ori_img/'
-    label_path = '../data/temp/celeb_ori_label/'
+    # save_semantic_path = '../data/temp/celeb_semantic_label/'
+    # save_label_path = '../data/temp/celeb_edge/'
+    # save_img_path = '../data/temp/celeb_aug_img/'
+    # contour_point_file_path = '../data/temp/celeb_eye_contour/'
+    # nose_point_file_path = '../data/temp/celeb_106points/'
+    # img_path = '../data/temp/celeb_ori_img/'
+    # label_path = '../data/temp/celeb_ori_label/'
+
+    # recreate_dir(save_label_path)
+    # recreate_dir(save_img_path)
 
     if is_get_semantic_label is True:
         get_semantic_label(label_path, save_semantic_path)

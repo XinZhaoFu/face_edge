@@ -737,28 +737,33 @@ def random_filling(img, label):
     :param label:
     :return:
     """
-    img_rows, img_cols, img_channel = img.shape
-    label_rows, label_cols = label.shape
-    rows_rate = label_rows / img_rows
-    cols_rate = label_cols / img_cols
+    img = cv2.resize(img, dsize=(256, 256))
+    label = cv2.resize(label, dsize=(256, 256), interpolation=cv2.INTER_AREA)
+    _, label = cv2.threshold(label, 0, 255, cv2.THRESH_BINARY)
 
-    filling_img_rows = randint(int(img_rows*1.2), img_rows*2)
-    filling_img_cols = randint(int(img_cols*1.2), img_cols*2)
-    filling_label_rows = int(filling_img_rows * rows_rate)
-    filling_label_cols = int(filling_img_cols * cols_rate)
+    filling_img = np.zeros(shape=(512, 512, 3))
+    filling_label = np.zeros(shape=(512, 512))
 
-    img_region_row, img_region_col = randint(0, filling_img_rows-img_rows), randint(0, filling_img_cols-img_cols)
-    label_region_row, label_region_col = int(img_region_row * rows_rate), int(img_region_col * cols_rate)
+    random_x, random_y = randint(0, 256), randint(0, 256)
 
-    filling_img = np.zeros(shape=(filling_img_rows, filling_img_cols, img_channel))
-    filling_label = np.zeros(shape=(filling_label_rows, filling_label_cols))
-
-    filling_img[img_region_row:img_region_row+img_rows, img_region_col:img_region_col+img_cols] = img
-    filling_label[label_region_row:label_region_row+label_rows, label_region_col:label_region_col+label_cols] = label
-
-    filling_img = cv2.resize(filling_img, dsize=(img_rows, img_cols))
-    filling_label = cv2.resize(filling_label, dsize=(label_rows, label_cols), interpolation=cv2.INTER_NEAREST)
+    filling_img[random_x:random_x+256, random_y:random_y+256] = img
+    filling_label[random_x:random_x+256, random_y:random_y+256] = label
 
     return filling_img, filling_label
+
+
+def random_crop(img, label):
+    
+    random_x, random_y = randint(0, 512), randint(0, 512)
+    crop_img = np.empty(shape=(512, 512, 3))
+    crop_label = np.empty(shape=(256, 256))
+
+    crop_img = img[random_x:random_x + 512, random_y:random_y + 512]
+    crop_label = label[random_x//2:random_x//2 + 256, random_y//2:random_y//2 + 256]
+
+    crop_label = cv2.resize(crop_label, dsize=(512, 512), interpolation=cv2.INTER_NEAREST)
+
+    return crop_img, crop_label
+
 
 

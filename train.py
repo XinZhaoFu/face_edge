@@ -169,7 +169,7 @@ class train:
 
             checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
                 filepath=self.checkpoint_save_path,
-                monitor='val_precision',
+                monitor='val_loss',
                 save_weights_only=True,
                 save_best_only=True,
                 mode='auto',
@@ -207,10 +207,9 @@ def train_init():
     # ex_info = 'u2net_16_64'
     # ex_info = 'u2net_mix_loss_mix_precision'
     # ex_info = 'detail_con_unet_face_edge'
+    # ex_info = 'u2net_dice_02aug42000'
 
     ex_info = 'u2net_bin_02aug10000'
-
-    # ex_info = 'mobile2_unet_bin'
 
     print('[INFO] 实验名称：' + ex_info)
 

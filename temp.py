@@ -19,8 +19,12 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import UnivariateSpline
 
 
-img = cv2.imread('./data/res/sample/demo0.jpg')
-cv2.imwrite('./data/res/sample/demo0.jpg', img)
+img = cv2.imread('./data/temp/celeb_edge/0_random_filling.png', 0)
+# img = cv2.resize(img, dsize=(256, 256), interpolation=cv2.INTER_AREA)
+# _, img = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY)
+# # img = cv2.pyrDown(img)
+print(img)
+# cv2.imwrite('./data/temp/temp/0.png', img)
 
 #
 # img = cv2.imread('./data/temp/celeb_ori_img/1.jpg')
