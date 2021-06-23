@@ -13,17 +13,85 @@ from data_utils.label_utils import get_point, fit_interpolation, draw_line
 
 np.set_printoptions(threshold=np.inf)
 
-from numpy import linspace, exp
-from numpy.random import randn
-import matplotlib.pyplot as plt
-from scipy.interpolate import UnivariateSpline
+img_list = glob('./data/res/con_temp/' + '*.jpg')
+label_list = glob('./data/res/con_temp/' + '*.png')
 
+img_list.sort()
+label_list.sort()
+# print(len(img_list), len(label_list))
+label_list1 = label_list[:15]
+label_list2 = label_list[15:30]
+label_list3 = label_list[30:]
+# assert len(img_list) == len(label_list)
 
-img = cv2.imread('./data/temp/celeb_edge/0_random_filling.png', 0)
+con_img = np.empty((512 * 15, 512 * 4, 3))
+
+for index, (img_path, label1_path, label2_path, label3_path) in enumerate(zip(img_list, label_list1, label_list2, label_list3)):
+    img = cv2.imread(img_path)
+    label1 = cv2.imread(label1_path)
+    label2 = cv2.imread(label2_path)
+    label3 = cv2.imread(label3_path)
+
+    img = cv2.resize(img, (512, 512))
+    label1 = cv2.resize(label1, (512, 512))
+    label2 = cv2.resize(label2, (512, 512))
+    label3 = cv2.resize(label3, (512, 512))
+
+    con_img[index * 512:(index + 1) * 512, :512, :] = img
+    con_img[index * 512:(index + 1) * 512, 512:1024, :] = label1
+    con_img[index * 512:(index + 1) * 512, 1024:1536, :] = label2
+    con_img[index * 512:(index + 1) * 512, 1536:2048, :] = label3
+
+cv2.imwrite('./data/res/con_temp/all_demo.jpg', con_img)
+
+# img1 = cv2.imread('./data/res/temp/con_0.jpg')
+# img2 = cv2.imread('./data/res/temp/con_5.jpg')
+# img3 = cv2.imread('./data/res/temp/con_10.jpg')
+# img4 = cv2.imread('./data/res/temp/con_15.jpg')
+#
+# con_img1 = np.empty((2560*2, 2048, 3))
+# con_img2 = np.empty((2560*2, 2048, 3))
+# all_img = np.empty((2560*4, 2048, 3))
+#
+# con_img1[:2560, :, :] = img1
+# con_img1[2560:, :, :] = img2
+# con_img2[:2560, :, :] = img3
+# con_img2[2560:, :, :] = img4
+# all_img[:5120, :, :] = con_img1
+# all_img[5120:, :, :] = con_img2
+#
+# cv2.imwrite('./data/res/temp/con_demo1.jpg', con_img1)
+# cv2.imwrite('./data/res/temp/con_demo2.jpg', con_img2)
+# cv2.imwrite('./data/res/temp/all_demo.jpg', all_img)
+
+# for index in range(0, 20, 5):
+#     con_img = np.empty((512 * 5, 512 * 4, 3))
+#     for sub_index in range(index, index+5):
+#         img = cv2.imread('./data/res/temp/demo' + str(sub_index) + '.jpg')
+#         sub_index = sub_index % 5
+#         con_img[sub_index*512:(sub_index+1)*512, :, :] = img
+#     cv2.imwrite('./data/res/temp/con_' + str(index) + '.jpg', con_img)
+
+# for index in range(1, 20):
+#     img = cv2.imread('./data/res/sample/demo' + str(index) + '.jpg')
+#     img = cv2.resize(img, (512, 512))
+#     label_gray = cv2.imread('./data/res/predict1/2021_06_23_11_15_19_933264_u2net_bin_02aug10000_demo' + str(index) + '.png')
+#     label_red = cv2.imread('./data/res/predict1/2021_06_23_11_13_08_273202_u2net_bin_02aug10000_demo' + str(index) + '.png')
+#     label_green = cv2.imread('./data/res/predict1/2021_06_23_11_18_31_989915_u2net_bin_02aug10000_demo' + str(index) + '.png')
+#
+#     con_img = np.empty((512, 512 * 4, 3))
+#     con_img[:, 0:512, :] = img
+#     con_img[:, 512:1024, :] = label_gray
+#     con_img[:, 1024:1536, :] = label_red
+#     con_img[:, 1536:2048, :] = label_green
+#
+#     cv2.imwrite('./data/res/temp/demo' + str(index) + '.jpg', con_img)
+
+# img = cv2.imread('./data/temp/celeb_edge/0_random_filling.png', 0)
 # img = cv2.resize(img, dsize=(256, 256), interpolation=cv2.INTER_AREA)
 # _, img = cv2.threshold(img, 0, 255, cv2.THRESH_BINARY)
 # # img = cv2.pyrDown(img)
-print(img)
+# print(img)
 # cv2.imwrite('./data/temp/temp/0.png', img)
 
 #
@@ -66,7 +134,7 @@ print(img)
 #     point2 = (int(point_x_list[index]), int(point_y_list[index]))
 #     cv2.line(img, point1, point2, (255, 255, 255), 1, cv2.LINE_AA)
 
-cv2.imwrite('./data/temp/temp/fl_1.jpg', img)
+# cv2.imwrite('./data/temp/temp/fl_1.jpg', img)
 
 # img = cv2.imread('./data/test/demo8.jpg')
 # label = cv2.imread('./data/predict/2021_06_16_09_53_21_658719_u2net_dice_demo8.png', 0)

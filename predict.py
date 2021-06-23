@@ -86,8 +86,12 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
         predict_img = np.empty(shape=(512, 512), dtype=np.uint8)
 
         predict_img[:, :] = predict_temp[0, :, :, 0] * 255
-        (rows, cols) = np.where(predict_img > 128)
-        predict_img[rows, cols] = 255
+
+        predict_rgb_img = np.zeros(shape=(512, 512, 3), dtype=np.uint8)
+        predict_rgb_img[:, :, 0] = predict_img
+
+        # (rows, cols) = np.where(predict_img > 128)
+        # predict_img[rows, cols] = 255
 
         # for _ in range(20):
         #     predict_img = cv2.resize(predict_img, dsize=(test_img_rows * 8, test_img_cols * 8),
@@ -96,7 +100,7 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
         #                              interpolation=cv2.INTER_AREA)
 
         # _, predict_img = cv2.threshold(predict_img, 50, 255, cv2.THRESH_BINARY)
-        cv2.imwrite(predict_save_path + test_img_name, predict_img)
+        cv2.imwrite(predict_save_path + test_img_name, predict_rgb_img)
         test_file_path_list.set_description('生成中')
 
 
@@ -175,7 +179,7 @@ def main():
     checkpoint_save_path = './checkpoint/' + ex_info + '.ckpt'
 
     test_file_path = './data/res/sample/'
-    predict_save_path = './data/res/predict1/'
+    predict_save_path = './data/res/predict2/'
 
     start_time = datetime.datetime.now()
 
