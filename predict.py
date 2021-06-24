@@ -88,7 +88,7 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
         predict_img[:, :] = predict_temp[0, :, :, 0] * 255
 
         predict_rgb_img = np.zeros(shape=(512, 512, 3), dtype=np.uint8)
-        predict_rgb_img[:, :, 0] = predict_img
+        predict_rgb_img[:, :, 2] = predict_img
 
         # (rows, cols) = np.where(predict_img > 128)
         # predict_img[rows, cols] = 255
@@ -100,7 +100,9 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
         #                              interpolation=cv2.INTER_AREA)
 
         # _, predict_img = cv2.threshold(predict_img, 50, 255, cv2.THRESH_BINARY)
-        cv2.imwrite(predict_save_path + test_img_name, predict_rgb_img)
+        cv2.imwrite(predict_save_path + test_img_name, predict_img)
+
+        # cv2.imwrite(predict_save_path + test_img_name, predict_rgb_img)
         test_file_path_list.set_description('生成中')
 
 
@@ -174,11 +176,12 @@ def main():
     # ex_info = 'u2net_16_64'
     # ex_info = 'u2net_16_64_bin'
     # ex_info = 'u2net_dice'
-    ex_info = 'u2net_bin_02aug10000'
+    ex_info = 'u2net_dice_02aug30000'
+    # ex_info = 'u2net_bin_02aug10000'
 
     checkpoint_save_path = './checkpoint/' + ex_info + '.ckpt'
 
-    test_file_path = './data/res/sample/'
+    test_file_path = './data/res/crop/'
     predict_save_path = './data/res/predict2/'
 
     start_time = datetime.datetime.now()

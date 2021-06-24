@@ -405,8 +405,9 @@ def get_iris_fit_ellipse(label, is_canny=True):
     """
     eyes_label = np.zeros(shape=label.shape, dtype=np.uint8)
     (rows, cols) = np.where(np.logical_and(label == 4, label == 5))
-    for row, col in zip(rows, cols):
-        eyes_label[row, col] = 255
+    # for row, col in zip(rows, cols):
+    #     eyes_label[row, col] = 255
+    eyes_label[rows, cols] = 255
 
     contours, hierarchy = cv2.findContours(eyes_label, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
