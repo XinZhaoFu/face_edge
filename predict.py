@@ -106,68 +106,6 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
         test_file_path_list.set_description('生成中')
 
 
-def integration_predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, img_name_comple):
-    """
-    没有用的垃圾功能
-
-    :param img_name_comple:
-    :param ex_info:
-    :param checkpoint_save_path:
-    :param test_file_path:
-    :param predict_save_path:
-    :return:
-    """
-    print('[info]模型加载 图片加载')
-    # 加载模型
-    model = U2Net(rsu_middle_filters=16,
-                  rsu_out_filters=32,
-                  num_class=1,
-                  end_activation='sigmoid',
-                  only_output=True)
-
-    model.compile(optimizer='Adam',
-                  loss=dice_loss(),
-                  metrics=['accuracy'])
-    model.load_weights(checkpoint_save_path)
-
-    test_file_path_list = glob.glob(test_file_path + '*.jpg')
-    print(len(test_file_path_list))
-    test_img_np = np.empty(shape=(1, 512, 512, 3), dtype=np.float32)
-
-    test_file_path_list = tqdm(test_file_path_list)
-    for test_file in test_file_path_list:
-        test_img = cv2.imread(test_file)
-        test_img = cv2.resize(test_img, dsize=(1024, 1024))
-
-        test_img_name = (test_file.split('/')[-1]).split('.')[0]
-        test_img_name = img_name_comple + '_' + ex_info + '_integration_' + test_img_name + '.png'
-
-        test_img_temp0 = test_img[0:512, 0:512, :]
-        test_img_temp1 = test_img[0:512, 512:1024, :]
-        test_img_temp2 = test_img[512:1024, 0:512, :]
-        test_img_temp3 = test_img[512:1024, 512:1024, :]
-        test_img_integration_list = [test_img_temp0, test_img_temp1, test_img_temp2, test_img_temp3]
-        predict_img_integration_list = []
-
-        for test_img in test_img_integration_list:
-            test_img = test_img / 255.
-            test_img_np[0, :, :, :] = test_img[:, :, :]
-
-            predict_temp = model.predict(test_img_np)
-            predict_img_integration_list.append(predict_temp)
-
-        predict_img = np.empty(shape=(1024, 1024), dtype=np.uint8)
-
-        predict_img[0:512, 0:512] = predict_img_integration_list[0][0, :, :, 0] * 255
-        predict_img[0:512, 512:1024] = predict_img_integration_list[1][0, :, :, 0] * 255
-        predict_img[512:1024, 0:512] = predict_img_integration_list[2][0, :, :, 0] * 255
-        predict_img[512:1024, 512:1024] = predict_img_integration_list[3][0, :, :, 0] * 255
-
-        cv2.imwrite(predict_save_path + test_img_name, predict_img)
-        test_file_path_list.set_description('生成中')
-
-
-
 def main():
     # ex_info = 'dense_unet_df32sf16_mix_loss'
     # ex_info = 'detail_con_unet_face_edge_focal'
