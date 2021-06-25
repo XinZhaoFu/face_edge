@@ -90,8 +90,8 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
         predict_rgb_img = np.zeros(shape=(512, 512, 3), dtype=np.uint8)
         predict_rgb_img[:, :, 2] = predict_img
 
-        # (rows, cols) = np.where(predict_img > 128)
-        # predict_img[rows, cols] = 255
+        (rows, cols) = np.where(predict_img > 128)
+        predict_img[rows, cols] = 255
 
         # for _ in range(20):
         #     predict_img = cv2.resize(predict_img, dsize=(test_img_rows * 8, test_img_cols * 8),
@@ -176,12 +176,12 @@ def main():
     # ex_info = 'u2net_16_64'
     # ex_info = 'u2net_16_64_bin'
     # ex_info = 'u2net_dice'
-    ex_info = 'u2net_dice_02aug30000'
-    # ex_info = 'u2net_bin_02aug10000'
+    # ex_info = 'u2net_dice_02aug30000'
+    ex_info = 'u2net_bin_02aug10000'
 
     checkpoint_save_path = './checkpoint/' + ex_info + '.ckpt'
 
-    test_file_path = './data/res/crop/'
+    test_file_path = './data/res/sample/'
     predict_save_path = './data/res/predict2/'
 
     start_time = datetime.datetime.now()

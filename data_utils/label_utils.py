@@ -80,6 +80,7 @@ def get_nose_label(label, img_rows, img_cols, nose_point_file_path, draw_type=0)
 
     # 绘制拟合鼻子轮廓 用传入的三组点(三组分别为左鼻侧、右鼻侧、鼻下沿)分别进行多项式拟合 然后通过插值(点距为3) 获得更多点坐标 并将这些点相连
     fit_point_index_list = [[11, 13, 4], [12, 14, 8], [4, 5, 6, 7, 8]]
+    # fit_point_index_list = [[], [], [4, 5, 6, 7, 8]]
     label = draw_nose_fit(label, nose_point_list, fit_point_index_list, thickness=1)
 
     return label
@@ -158,6 +159,35 @@ def nose_lower_fit(point_list):
     fit_point[:, 1] = fit_point_y
 
     return fit_point
+
+
+def nose_lower_fit2(point_list):
+    """
+    :param point_list:
+    :return:
+    """
+    point_list = np.array(point_list)
+    point_x = point_list[:, 0]
+    point_y = point_list[:, 1]
+
+    inter1_point_left_x = (point_x[0] + point_x[1]) // 2
+    inter1_point_right_x = (point_x[2] + point_x[1]) // 2
+    inter2_point_left_x = (point_x[3] + point_x[2]) // 2
+    inter2_point_right_x = (point_x[3] + point_x[4]) // 2
+
+    fit1_point_x, fit1_point_y = fit_interpolation(point_x, point_y, 4, inter1_point_left_x, inter1_point_right_x, 3)
+
+    fit1_point = np.empty(shape=(len(fit1_point_x), 2), dtype=np.int32)
+    fit1_point[:, 0] = fit1_point_x
+    fit1_point[:, 1] = fit1_point_y
+
+    fit2_point_x, fit2_point_y = fit_interpolation(point_x, point_y, 4, inter2_point_left_x, inter2_point_right_x, 3)
+
+    fit2_point = np.empty(shape=(len(fit2_point_x), 2), dtype=np.int32)
+    fit2_point[:, 0] = fit2_point_x
+    fit2_point[:, 1] = fit2_point_y
+
+    return fit1_point, fit2_point
 
 
 def fit_interpolation(point_x, point_y, polynomial_degree, inter_left, inter_right, inter_space):
