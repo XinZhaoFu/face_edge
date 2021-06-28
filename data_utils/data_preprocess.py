@@ -1,5 +1,6 @@
 import tensorflow as tf
 from glob import glob
+import numpy as np
 from data_utils.utils import check_img_label_list, shuffle_file, check_file_is_aug
 
 
@@ -77,18 +78,25 @@ def load_and_preprocess_image_label(img_path, label_path):
     """
     image = tf.io.read_file(img_path)
     image = tf.image.decode_jpeg(image, channels=3)
+    # image = tf.reshape(tensor=image, shape=(512, 512, 3))
     # image = tf.image.resize(image, [512, 512])
     image = tf.cast(image, tf.float32) / 255.0
 
     label = tf.io.read_file(label_path)
     label = tf.image.decode_png(label, channels=1)
     # label = tf.image.resize(label, [512, 512], method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)
-    label = tf.reshape(tensor=label, shape=(512, 512))
-    label = tf.cast(label, tf.float32) / 255.0
+    # label = tf.reshape(tensor=label, shape=(512, 512))
+    # label = tf.cast(label, tf.float32) / 255.0
     # 需要独热码 就注释掉上面一行 更换为下面两行
     # label = tf.cast(label, tf.uint8)
-    # label = tf.one_hot(indices=label, depth=2, on_value=1, off_value=0)
-
+    label = tf.one_hot(indices=label, depth=20)
+    # label = tf.reshape(tensor=label, shape=(512, 512, 20))
     # print(image.shape, label.shape)
-    return image, label
+
+    label_np = np.zeros(shape=(512, 512, 20), dtype=np.uint8)
+    for index in range(20):
+        if label[:, :] == index:
+            label_np[:, :, index] = 1
+
+    return image, label_np
 

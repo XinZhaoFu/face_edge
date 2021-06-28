@@ -176,6 +176,12 @@ def check_file_is_aug(img_file_path_list, label_file_path_list):
 
 
 def face_crop(img):
+    """
+    使用face_recognition库进行人脸检测 因为想要整个脑袋和肩膀 所以所得人脸区域坐标往外扩了很多
+
+    :param img:
+    :return:
+    """
     img_rows, img_cols, img_channel = img.shape
     if img_rows < 512 or img_cols < 512:
         img = cv2.resize(img, (512, 512))
@@ -209,6 +215,8 @@ def face_crop(img):
 
 def filling(img):
     """
+    图像上下左右各填充256个像素
+
     :param img:
     :return:
     """

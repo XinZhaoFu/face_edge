@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import datetime
 from tqdm import tqdm
-from label_utils import get_contour_pupil_label, get_nose_label, get_senses_augmentation, gridMask, cutout, \
+from label_utils import get_contour_pupil_label, get_nose_label, gridMask, cutout, \
     random_color_scale, random_filling, random_crop
 from utils import recreate_dir
 
@@ -49,8 +49,8 @@ def code_label(label, class_code):
     :param class_code:
     :return:
     """
-    if class_code == 6:
-        class_code = 1
+    # if class_code == 6:
+    #     class_code = 1
     (rows, cols) = np.where(label == 255)
     label[rows, cols] = class_code
     return label
@@ -103,6 +103,13 @@ def concat_label(labels, class_codes, priority=None):
 
 
 def get_semantic_label(label_path, save_path):
+    """
+    获取语义分割标签
+
+    :param label_path:
+    :param save_path:
+    :return:
+    """
     label_file_list = glob(label_path + '*.png')
     label_file_list.sort()
 
@@ -151,7 +158,7 @@ def add_contour_nose_label(img_path,
                            save_img_path,
                            is_augmentation=False):
     """
-    在分割图的基础上获取图片
+    在语义分割标签的基础上获得含有虹膜和鼻子的轮廓标签  并进行离线的数据扩增
 
     :param save_img_path:
     :param img_path:
@@ -193,13 +200,14 @@ def add_contour_nose_label(img_path,
         con_label = get_contour_pupil_label(label=semantic_label,
                                             contour_point_file_path=contour_point_path,
                                             img_rows=img_rows,
-                                            img_cols=img_cols)
+                                            img_cols=img_cols,
+                                            is_canny=False)
         # con_label = cv2.Canny(con_label, 0, 0)
-        con_label = get_nose_label(label=con_label,
-                                   img_rows=img_rows,
-                                   img_cols=img_cols,
-                                   nose_point_file_path=nose_point_path,
-                                   draw_type=0)
+        # con_label = get_nose_label(label=con_label,
+        #                            img_rows=img_rows,
+        #                            img_cols=img_cols,
+        #                            nose_point_file_path=nose_point_path,
+        #                            draw_type=0)
 
         cv2.imwrite(save_label_path + label_name + '.png', con_label)
 
@@ -219,9 +227,11 @@ def add_contour_nose_label(img_path,
             #         aug_index += 1
 
             # random_crop
-            crop_img, crop_label = random_crop(img, con_label)
-            cv2.imwrite(save_img_path + img_name + '_random_crop.jpg', crop_img)
-            cv2.imwrite(save_label_path + label_name + '_random_crop.png', crop_label)
+            random_crop_num = 1
+            for index in range(random_crop_num):
+                crop_img, crop_label = random_crop(img, con_label)
+                cv2.imwrite(save_img_path + img_name + '_random_crop_' + str(index) + '.jpg', crop_img)
+                cv2.imwrite(save_label_path + label_name + '_random_crop_' + str(index) + '.png', crop_label)
 
             # gridmask
             gridmask_num = 1
@@ -238,34 +248,41 @@ def add_contour_nose_label(img_path,
                 cv2.imwrite(save_label_path + label_name + '_cutout_' + str(index) + '.png', con_label)
 
             # random_filling
-            filling_img, filling_label = random_filling(img, con_label)
-            cv2.imwrite(save_img_path + img_name + '_random_filling.jpg', filling_img)
-            cv2.imwrite(save_label_path + label_name + '_random_filling.png', filling_label)
+            random_filling_num = 1
+            for index in range(random_filling_num):
+                filling_img, filling_label = random_filling(img, con_label)
+                cv2.imwrite(save_img_path + img_name + '_random_filling_' + str(index) + '.jpg', filling_img)
+                cv2.imwrite(save_label_path + label_name + '_random_filling_' + str(index) + '.png', filling_label)
 
 
-def main(is_get_semantic_label=True, is_augmentation=True):
-    # save_semantic_path = '../data/celeb_semantic_label/'
-    # save_label_path = '../data/celeb_edge/'
-    # save_img_path = '../data/celeb_aug_img/'
-    # contour_point_file_path = '../data/celeb_eye_contour/'
-    # nose_point_file_path = '../data/celeb_106points/'
-    # img_path = '../data/celeb_ori_img/'
-    # label_path = '../data/celeb_ori_label/'
+def main():
+    save_semantic_path = '../data/celeb_semantic_label/'
+    save_label_path = '../data/celeb_edge/'
+    save_img_path = '../data/celeb_aug_img/'
+    contour_point_file_path = '../data/celeb_eye_contour/'
+    nose_point_file_path = '../data/celeb_106points/'
+    img_path = '../data/celeb_ori_img/'
+    label_path = '../data/celeb_ori_label/'
 
-    save_semantic_path = '../data/temp/celeb_semantic_label/'
-    save_label_path = '../data/temp/celeb_edge/'
-    save_img_path = '../data/temp/celeb_aug_img/'
-    contour_point_file_path = '../data/temp/celeb_eye_contour/'
-    nose_point_file_path = '../data/temp/celeb_106points/'
-    img_path = '../data/temp/celeb_ori_img/'
-    label_path = '../data/temp/celeb_ori_label/'
+    # save_semantic_path = '../data/temp/celeb_semantic_label/'
+    # save_label_path = '../data/temp/celeb_edge/'
+    # save_img_path = '../data/temp/celeb_aug_img/'
+    # contour_point_file_path = '../data/temp/celeb_eye_contour/'
+    # nose_point_file_path = '../data/temp/celeb_106points/'
+    # img_path = '../data/temp/celeb_ori_img/'
+    # label_path = '../data/temp/celeb_ori_label/'
 
-    # recreate_dir(save_label_path)
-    # recreate_dir(save_img_path)
+    is_get_semantic_label = True
+    is_augmentation = True
+
+    recreate_dir(save_label_path)
+    recreate_dir(save_img_path)
 
     if is_get_semantic_label is True:
+        print('[INFO] 重新获得语义label')
         get_semantic_label(label_path, save_semantic_path)
 
+    print('[INFO] 进行数据扩增')
     add_contour_nose_label(img_path=img_path,
                            save_semantic_path=save_semantic_path,
                            contour_point_file_path=contour_point_file_path,
@@ -277,6 +294,6 @@ def main(is_get_semantic_label=True, is_augmentation=True):
 
 if __name__ == '__main__':
     start_time = datetime.datetime.now()
-    main(is_get_semantic_label=False, is_augmentation=True)
+    main()
     end_time = datetime.datetime.now()
     print('time:\t' + str(end_time - start_time).split('.')[0])

@@ -13,36 +13,42 @@ from data_utils.label_utils import get_point, fit_interpolation, draw_line
 
 np.set_printoptions(threshold=np.inf)
 
-img_list = glob('./data/res/con_temp/' + '*.jpg')
-label_list = glob('./data/res/con_temp/' + '*.png')
+label = cv2.imread('./data/temp/celeb_edge/0.png', 0)
+(rows, cols) = np.where(label == 6)
+print(len(rows))
+label = label * 15
+cv2.imwrite('./data/temp/temp/0_seg.png', label)
 
-img_list.sort()
-label_list.sort()
-# print(len(img_list), len(label_list))
-label_list1 = label_list[:15]
-label_list2 = label_list[15:30]
-label_list3 = label_list[30:]
-# assert len(img_list) == len(label_list)
-
-con_img = np.empty((512 * 15, 512 * 4, 3))
-
-for index, (img_path, label1_path, label2_path, label3_path) in enumerate(zip(img_list, label_list1, label_list2, label_list3)):
-    img = cv2.imread(img_path)
-    label1 = cv2.imread(label1_path)
-    label2 = cv2.imread(label2_path)
-    label3 = cv2.imread(label3_path)
-
-    img = cv2.resize(img, (512, 512))
-    label1 = cv2.resize(label1, (512, 512))
-    label2 = cv2.resize(label2, (512, 512))
-    label3 = cv2.resize(label3, (512, 512))
-
-    con_img[index * 512:(index + 1) * 512, :512, :] = img
-    con_img[index * 512:(index + 1) * 512, 512:1024, :] = label1
-    con_img[index * 512:(index + 1) * 512, 1024:1536, :] = label2
-    con_img[index * 512:(index + 1) * 512, 1536:2048, :] = label3
-
-cv2.imwrite('./data/res/con_temp/all_demo.jpg', con_img)
+# img_list = glob('./data/res/con_temp/' + '*.jpg')
+# label_list = glob('./data/res/con_temp/' + '*.png')
+#
+# img_list.sort()
+# label_list.sort()
+# # print(len(img_list), len(label_list))
+# label_list1 = label_list[:15]
+# label_list2 = label_list[15:30]
+# label_list3 = label_list[30:]
+# # assert len(img_list) == len(label_list)
+#
+# con_img = np.empty((512 * 15, 512 * 4, 3))
+#
+# for index, (img_path, label1_path, label2_path, label3_path) in enumerate(zip(img_list, label_list1, label_list2, label_list3)):
+#     img = cv2.imread(img_path)
+#     label1 = cv2.imread(label1_path)
+#     label2 = cv2.imread(label2_path)
+#     label3 = cv2.imread(label3_path)
+#
+#     img = cv2.resize(img, (512, 512))
+#     label1 = cv2.resize(label1, (512, 512))
+#     label2 = cv2.resize(label2, (512, 512))
+#     label3 = cv2.resize(label3, (512, 512))
+#
+#     con_img[index * 512:(index + 1) * 512, :512, :] = img
+#     con_img[index * 512:(index + 1) * 512, 512:1024, :] = label1
+#     con_img[index * 512:(index + 1) * 512, 1024:1536, :] = label2
+#     con_img[index * 512:(index + 1) * 512, 1536:2048, :] = label3
+#
+# cv2.imwrite('./data/res/con_temp/all_demo.jpg', con_img)
 
 # img1 = cv2.imread('./data/res/temp/con_0.jpg')
 # img2 = cv2.imread('./data/res/temp/con_5.jpg')

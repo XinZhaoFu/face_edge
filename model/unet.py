@@ -4,24 +4,6 @@ from tensorflow.keras.models import Sequential
 from model.utils import Con_Bn_Act, CBR_Block
 
 
-class Up_CBR_Block(Model):
-    def __init__(self, filters, num_cbr=1, block_name=None):
-        super(Up_CBR_Block, self).__init__()
-        self.filters = filters
-        self.num_cbr = num_cbr
-        self.block_name = None
-        if block_name is not None and type(block_name) == str:
-            self.block_name = block_name
-
-        self.con_blocks = CBR_Block(filters=self.filters, num_cbr=self.num_cbr, block_name=self.block_name)
-        self.up = UpSampling2D(name=self.block_name + '_up_sampling')
-
-    def call(self, inputs):
-        con = self.con_blocks(inputs)
-        out = self.up(con)
-        return out
-
-
 class UNet(Model):
     def __init__(self, semantic_filters=32, detail_filters=32, num_class=2, semantic_num_cbr=1, detail_num_cbr=4, end_activation='softmax'):
         super(UNet, self).__init__()
@@ -98,4 +80,22 @@ class UNet(Model):
 
         out = self.con_end(up1)
 
+        return out
+
+
+class Up_CBR_Block(Model):
+    def __init__(self, filters, num_cbr=1, block_name=None):
+        super(Up_CBR_Block, self).__init__()
+        self.filters = filters
+        self.num_cbr = num_cbr
+        self.block_name = None
+        if block_name is not None and type(block_name) == str:
+            self.block_name = block_name
+
+        self.con_blocks = CBR_Block(filters=self.filters, num_cbr=self.num_cbr, block_name=self.block_name)
+        self.up = UpSampling2D(name=self.block_name + '_up_sampling')
+
+    def call(self, inputs):
+        con = self.con_blocks(inputs)
+        out = self.up(con)
         return out

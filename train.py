@@ -48,7 +48,7 @@ def parseArgs():
     parser.add_argument('--epochs',
                         dest='epochs',
                         help='epochs',
-                        default=1,
+                        default=0,
                         type=int)
     parser.add_argument('--batch_size',
                         dest='batch_size',
@@ -107,8 +107,8 @@ class train:
         self.checkpoint_input_path = self.checkpoint_save_path
         print('[INFO] checkpoint_input_path:\t' + self.checkpoint_input_path)
 
-        self.strategy = tf.distribute.MirroredStrategy()
-        print('[INFO] 目前使用gpu数量为: {}'.format(self.strategy.num_replicas_in_sync))
+        # self.strategy = tf.distribute.MirroredStrategy()
+        # print('[INFO] 目前使用gpu数量为: {}'.format(self.strategy.num_replicas_in_sync))
 
         data_loader = Data_Loader_File(data_augmentation=self.data_augmentation,
                                        batch_size=self.batch_size,
@@ -121,59 +121,70 @@ class train:
     def model_train(self):
         """
         可多卡训练
+
         :return:
         """
-        with self.strategy.scope():
-            # model = DenseUNet(semantic_filters=16,
-            #                   detail_filters=32,
-            #                   num_class=1,
-            #                   semantic_num_cbr=1,
-            #                   detail_num_cbr=3,
-            #                   end_activation='sigmoid')
+        # with self.strategy.scope():
+        # model = DenseUNet(semantic_filters=16,
+        #                   detail_filters=32,
+        #                   num_class=1,
+        #                   semantic_num_cbr=1,
+        #                   detail_num_cbr=3,
+        #                   end_activation='sigmoid')
 
-            # model = DenseNet(filters=64, num_class=1, activation='sigmoid')
+        # model = DenseNet(filters=64, num_class=1, activation='sigmoid')
 
-            # model = UNet(semantic_filters=16,
-            #              detail_filters=32,
-            #              num_class=1,
-            #              semantic_num_cbr=1,
-            #              detail_num_cbr=6,
-            #              end_activation='sigmoid')
+        # model = UNet(semantic_filters=16,
+        #              detail_filters=32,
+        #              num_class=1,
+        #              semantic_num_cbr=1,
+        #              detail_num_cbr=6,
+        #              end_activation='sigmoid')
 
-            # model = BisenetV2(detail_filters=32, aggregation_filters=32, num_class=1, final_act='sigmoid')
+        # model = BisenetV2(detail_filters=32, aggregation_filters=32, num_class=1, final_act='sigmoid')
 
-            model = U2Net(rsu_middle_filters=16,
-                          rsu_out_filters=32,
-                          num_class=1,
-                          end_activation='sigmoid',
-                          only_output=True)
+        # model = U2Net(rsu_middle_filters=16,
+        #               rsu_out_filters=32,
+        #               num_class=1,
+        #               end_activation='sigmoid',
+        #               only_output=True)
+        model = U2Net(rsu_middle_filters=16,
+                      rsu_out_filters=32,
+                      num_class=20,
+                      end_activation='softmax',
+                      only_output=True)
 
-            if self.learning_rate > 0:
-                optimizer = tf.keras.optimizers.SGD(learning_rate=self.learning_rate)
-                print('[INFO] 使用sgd,其值为：\t' + str(self.learning_rate))
-            else:
-                optimizer = 'Adam'
-                print('[INFO] 使用Adam')
+        if self.learning_rate > 0:
+            optimizer = tf.keras.optimizers.SGD(learning_rate=self.learning_rate)
+            print('[INFO] 使用sgd,其值为：\t' + str(self.learning_rate))
+        else:
+            optimizer = 'Adam'
+            print('[INFO] 使用Adam')
 
-            model.compile(
-                optimizer=optimizer,
-                loss=tf.keras.losses.BinaryCrossentropy(),
-                metrics=[tf.keras.metrics.Precision()]
-            )
+        # model.compile(
+        #     optimizer=optimizer,
+        #     loss=dice_loss(),
+        #     metrics=[tf.keras.metrics.Precision()]
+        # )
+        model.compile(
+            optimizer=optimizer,
+            loss=tf.keras.losses.SparseCategoricalCrossentropy(),
+            metrics=tf.keras.metrics.Accuracy()
+        )
 
-            if os.path.exists(self.checkpoint_input_path + '.index') and self.load_weights:
-                print("[INFO] -------------------------------------------------")
-                print("[INFO] -----------------loading weights-----------------")
-                print("[INFO] -------------------------------------------------")
-                model.load_weights(self.checkpoint_input_path)
+        if os.path.exists(self.checkpoint_input_path + '.index') and self.load_weights:
+            print("[INFO] -------------------------------------------------")
+            print("[INFO] -----------------loading weights-----------------")
+            print("[INFO] -------------------------------------------------")
+            model.load_weights(self.checkpoint_input_path)
 
-            checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-                filepath=self.checkpoint_save_path,
-                monitor='val_loss',
-                save_weights_only=True,
-                save_best_only=True,
-                mode='auto',
-                save_freq='epoch')
+        checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
+            filepath=self.checkpoint_save_path,
+            monitor='val_precision',
+            save_weights_only=True,
+            save_best_only=True,
+            mode='auto',
+            save_freq='epoch')
 
         history = model.fit(
             self.train_datasets,
@@ -208,8 +219,10 @@ def train_init():
     # ex_info = 'u2net_mix_loss_mix_precision'
     # ex_info = 'detail_con_unet_face_edge'
     # ex_info = 'u2net_dice_02aug42000'
-
-    ex_info = 'u2net_bin_02aug10000'
+    # ex_info = 'u2net_bin_02aug10000'
+    # ex_info = 'u2net_bin_01aug16000'
+    # ex_info = 'u2net_dice_02aug42000'
+    ex_info = 'u2net_seg'
 
     print('[INFO] 实验名称：' + ex_info)
 

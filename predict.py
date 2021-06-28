@@ -115,7 +115,8 @@ def main():
     # ex_info = 'u2net_16_64_bin'
     # ex_info = 'u2net_dice'
     # ex_info = 'u2net_dice_02aug30000'
-    ex_info = 'u2net_bin_02aug10000'
+    # ex_info = 'u2net_bin_02aug10000'
+    ex_info = 'u2net_dice_02aug42000'
 
     checkpoint_save_path = './checkpoint/' + ex_info + '.ckpt'
 

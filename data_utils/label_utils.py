@@ -86,12 +86,13 @@ def get_nose_label(label, img_rows, img_cols, nose_point_file_path, draw_type=0)
     return label
 
 
-def get_contour_pupil_label(label, contour_point_file_path, img_rows, img_cols):
+def get_contour_pupil_label(label, contour_point_file_path, img_rows, img_cols, is_canny=True):
     """
     基于商汤虹膜关键点接口 绘制虹膜轮廓与瞳孔中心点
     (瞳孔不支持 带瞳孔不好看 因为商汤提供的不是瞳孔的轮廓坐标 而是瞳孔中心点坐标 所以后面重写代码的时候 只保留了可供重写的接口但舍弃了实现)
     基本流程与绘制鼻子的流程相似
 
+    :param is_canny:
     :param label:
     :param contour_point_file_path:
     :param img_rows:
@@ -101,17 +102,20 @@ def get_contour_pupil_label(label, contour_point_file_path, img_rows, img_cols):
     label_rows, label_cols = label.shape
     iris_label, _ = draw_contour_pupil(contour_point_file_path, img_rows, img_cols, label_rows, label_cols)
 
-    # 寻找眼睛整体与虹膜整体的并集 这么操作是因为虹膜轮廓不一定完全位于眼睛内部 会有超出的部分
+    # 寻找眼睛整体与虹膜整体的交集 这么操作是因为虹膜轮廓不一定完全位于眼睛内部 会有超出的部分
     intersection_label = np.zeros(shape=(label_rows, label_cols), dtype=np.uint8)
     (rows, cols) = np.where(np.logical_or(label == 4, label == 5))
     for row, col in zip(rows, cols):
         if iris_label[row, col] == 255:
             intersection_label[row, col] = 19
+    if is_canny:
+        label = cv2.Canny(label, 0, 0)
 
-    label = cv2.Canny(label, 0, 0)
-
-    contours, _ = cv2.findContours(intersection_label, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    cv2.drawContours(label, contours, -1, 255, 1)
+        contours, _ = cv2.findContours(intersection_label, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        cv2.drawContours(label, contours, -1, 255, 1)
+    else:
+        (rows, cols) = np.where(intersection_label == 19)
+        label[rows, cols] = 19
 
     return label
 
@@ -159,35 +163,6 @@ def nose_lower_fit(point_list):
     fit_point[:, 1] = fit_point_y
 
     return fit_point
-
-
-def nose_lower_fit2(point_list):
-    """
-    :param point_list:
-    :return:
-    """
-    point_list = np.array(point_list)
-    point_x = point_list[:, 0]
-    point_y = point_list[:, 1]
-
-    inter1_point_left_x = (point_x[0] + point_x[1]) // 2
-    inter1_point_right_x = (point_x[2] + point_x[1]) // 2
-    inter2_point_left_x = (point_x[3] + point_x[2]) // 2
-    inter2_point_right_x = (point_x[3] + point_x[4]) // 2
-
-    fit1_point_x, fit1_point_y = fit_interpolation(point_x, point_y, 4, inter1_point_left_x, inter1_point_right_x, 3)
-
-    fit1_point = np.empty(shape=(len(fit1_point_x), 2), dtype=np.int32)
-    fit1_point[:, 0] = fit1_point_x
-    fit1_point[:, 1] = fit1_point_y
-
-    fit2_point_x, fit2_point_y = fit_interpolation(point_x, point_y, 4, inter2_point_left_x, inter2_point_right_x, 3)
-
-    fit2_point = np.empty(shape=(len(fit2_point_x), 2), dtype=np.int32)
-    fit2_point[:, 0] = fit2_point_x
-    fit2_point[:, 1] = fit2_point_y
-
-    return fit1_point, fit2_point
 
 
 def fit_interpolation(point_x, point_y, polynomial_degree, inter_left, inter_right, inter_space):
@@ -560,13 +535,13 @@ def random_crop(img, label):
             random_crop_img_length = randint(img_rows // 4, img_rows // 2)
         else:
             random_crop_img_length = randint(img_cols // 4, img_cols // 2)
-        random_crop_label_length = random_crop_img_length * resize_rate
+        random_crop_label_length = int(random_crop_img_length * resize_rate)
 
         random_crop_img_row_init = randint(1, img_rows - random_crop_img_length)
         random_crop_img_col_init = randint(1, img_cols - random_crop_img_length)
 
-        random_crop_label_row_init = randint(1, img_rows - random_crop_label_length)
-        random_crop_label_col_init = randint(1, img_cols - random_crop_label_length)
+        random_crop_label_row_init = randint(1, label_rows - random_crop_label_length)
+        random_crop_label_col_init = randint(1, label_cols - random_crop_label_length)
 
         crop_img = np.empty(shape=(random_crop_img_length, random_crop_img_length, img_channel), dtype=np.uint8)
         crop_label = np.empty(shape=(random_crop_label_length, random_crop_label_length), dtype=np.uint8)
@@ -663,89 +638,6 @@ def gridMask(img, rate=0.1):
     return img
 
 
-def get_senses_augmentation(label, points_file_path, img):
-    """
-    获得五官局部的扩增图片
-
-    :param label:
-    :param points_file_path:
-    :param img:
-    :return:
-    """
-    face_index_list = [0, 16, 32, 35, 40]
-    left_eye_index_list = [0, 35, 43, 45]
-    right_eye_index_list = [43, 40, 32, 45]
-    nose_index_list = [43, 87, 84, 90]
-    lip_index_list = [8, 49, 24, 16]
-
-    aug_img, aug_label = [], []
-    aug_flag = [0, 0, 0, 0, 0]
-
-    label_rows, label_cols = label.shape
-    img_rows, img_cols, channel = img.shape
-    point_x_resize, point_y_resize = label_rows / img_rows, label_cols / img_cols
-    points = get_point(point_file_path=points_file_path, point_x_resize=point_x_resize, point_y_resize=point_y_resize)
-
-    face_points = extract_index_point(point_list=points, point_index_list=face_index_list)
-    if len(face_points) != 0:
-        face_coordinate = [int(face_points[0][0]), int(face_points[2][0]),
-                           int((face_points[3][1] + face_points[4][1]) / 2),
-                           int(face_points[1][1])]
-        res = check_coordinate(face_coordinate)
-        if res is True:
-            face_img, face_label = get_sense_crop_img_label(img, label, face_coordinate, point_x_resize, point_y_resize)
-            aug_img.append(face_img)
-            aug_label.append(face_label)
-            aug_flag[0] = 1
-
-    left_eye_points = extract_index_point(point_list=points, point_index_list=left_eye_index_list)
-    if len(left_eye_points) != 0:
-        left_eye_coordinate = [int(left_eye_points[0][0]), int(left_eye_points[2][0]), int(left_eye_points[1][1]),
-                               int(left_eye_points[3][1])]
-        res = check_coordinate(left_eye_coordinate)
-        if res is True:
-            left_eye_img, left_eye_label = get_sense_crop_img_label(img, label, left_eye_coordinate, point_x_resize,
-                                                                    point_y_resize)
-            aug_img.append(left_eye_img)
-            aug_label.append(left_eye_label)
-            aug_flag[1] = 1
-
-    right_eye_points = extract_index_point(point_list=points, point_index_list=right_eye_index_list)
-    if len(right_eye_points) != 0:
-        right_eye_coordinate = [int(right_eye_points[0][0]), int(right_eye_points[2][0]), int(right_eye_points[1][1]),
-                                int(right_eye_points[3][1])]
-        res = check_coordinate(right_eye_coordinate)
-        if res is True:
-            right_eye_img, right_eye_label = get_sense_crop_img_label(img, label, right_eye_coordinate, point_x_resize,
-                                                                      point_y_resize)
-            aug_img.append(right_eye_img)
-            aug_label.append(right_eye_label)
-            aug_flag[2] = 1
-
-    nose_points = extract_index_point(point_list=points, point_index_list=nose_index_list)
-    if len(nose_points) != 0:
-        nose_coordinate = [int(nose_points[2][0]), int(nose_points[3][0]), int(nose_points[0][1]),
-                           int(nose_points[1][1])]
-        res = check_coordinate(nose_coordinate)
-        if res is True:
-            nose_img, nose_label = get_sense_crop_img_label(img, label, nose_coordinate, point_x_resize, point_y_resize)
-            aug_img.append(nose_img)
-            aug_label.append(nose_label)
-            aug_flag[3] = 1
-
-    lip_points = extract_index_point(point_list=points, point_index_list=lip_index_list)
-    if len(lip_points) != 0:
-        lip_coordinate = [int(lip_points[0][0]), int(lip_points[2][0]), int(lip_points[1][1]), int(lip_points[3][1])]
-        res = check_coordinate(lip_coordinate)
-        if res is True:
-            lip_img, lip_label = get_sense_crop_img_label(img, label, lip_coordinate, point_x_resize, point_y_resize)
-            aug_img.append(lip_img)
-            aug_label.append(lip_label)
-            aug_flag[4] = 1
-
-    return aug_img, aug_label, aug_flag
-
-
 def get_sense_crop_img_label(img, label, points, point_x_resize, point_y_resize):
     img = img[int(points[2] / point_y_resize):int(points[3] / point_y_resize),
               int(points[0] / point_x_resize):int(points[1] / point_x_resize), :]
@@ -770,7 +662,7 @@ def random_filling(img, label):
     """
     img = cv2.resize(img, dsize=(256, 256))
     label = cv2.resize(label, dsize=(256, 256), interpolation=cv2.INTER_AREA)
-    _, label = cv2.threshold(label, 0, 255, cv2.THRESH_BINARY)
+    # _, label = cv2.threshold(label, 0, 255, cv2.THRESH_BINARY)
 
     filling_img = np.zeros(shape=(512, 512, 3))
     filling_label = np.zeros(shape=(512, 512))
@@ -783,18 +675,18 @@ def random_filling(img, label):
     return filling_img, filling_label
 
 
-def random_crop(img, label):
-    
-    random_x, random_y = randint(0, 512), randint(0, 512)
-    crop_img = np.empty(shape=(512, 512, 3))
-    crop_label = np.empty(shape=(256, 256))
-
-    crop_img = img[random_x:random_x + 512, random_y:random_y + 512]
-    crop_label = label[random_x//2:random_x//2 + 256, random_y//2:random_y//2 + 256]
-
-    crop_label = cv2.resize(crop_label, dsize=(512, 512), interpolation=cv2.INTER_NEAREST)
-
-    return crop_img, crop_label
+# def random_crop(img, label):
+#
+#     random_x, random_y = randint(0, 512), randint(0, 512)
+#     crop_img = np.empty(shape=(512, 512, 3))
+#     crop_label = np.empty(shape=(256, 256))
+#
+#     crop_img = img[random_x:random_x + 512, random_y:random_y + 512]
+#     crop_label = label[random_x//2:random_x//2 + 256, random_y//2:random_y//2 + 256]
+#
+#     crop_label = cv2.resize(crop_label, dsize=(512, 512), interpolation=cv2.INTER_NEAREST)
+#
+#     return crop_img, crop_label
 
 
 
