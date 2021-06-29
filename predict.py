@@ -35,28 +35,20 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
     """
     print('[info]模型加载 图片加载')
     # 加载模型
+    # model = U2Net(rsu_middle_filters=16,
+    #               rsu_out_filters=32,
+    #               num_class=1,
+    #               end_activation='sigmoid',
+    #               only_output=True)
     model = U2Net(rsu_middle_filters=16,
                   rsu_out_filters=32,
-                  num_class=1,
-                  end_activation='sigmoid',
+                  num_class=20,
+                  end_activation='softmax',
                   only_output=True)
-    # model = BisenetV2(detail_filters=32, aggregation_filters=32, num_class=1, final_act='sigmoid')
-    # model = DenseUNet(semantic_filters=16,
-    #                   detail_filters=32,
-    #                   num_class=1,
-    #                   semantic_num_cbr=1,
-    #                   detail_num_cbr=2,
-    #                   end_activation='sigmoid')
-    # model = DenseNet(filters=32, num_class=1, activation='sigmoid')
-    # model = UNet(semantic_filters=16,
-    #              detail_filters=32,
-    #              num_class=1,
-    #              semantic_num_cbr=1,
-    #              detail_num_cbr=6,
-    #              end_activation='sigmoid')
-    model.compile(optimizer='Adam',
-                  loss=dice_loss(),
-                  metrics=['accuracy'])
+
+    # model.compile(optimizer='Adam',
+    #               loss=dice_loss(),
+    #               metrics=['accuracy'])
     model.load_weights(checkpoint_save_path)
 
     test_file_path_list = glob.glob(test_file_path + '*.jpg')
@@ -83,15 +75,21 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
 
         predict_temp = model.predict(test_img_np)
 
+        # seg
+        predict_temp = tf.math.argmax(predict_temp, 3)
+        predict_temp = np.array(predict_temp)
+        predict_temp = np.reshape(predict_temp, newshape=(512, 512))
         predict_img = np.empty(shape=(512, 512), dtype=np.uint8)
+        predict_img[:, :] = predict_temp[:, :] * 15
 
-        predict_img[:, :] = predict_temp[0, :, :, 0] * 255
-
-        predict_rgb_img = np.zeros(shape=(512, 512, 3), dtype=np.uint8)
-        predict_rgb_img[:, :, 2] = predict_img
-
-        (rows, cols) = np.where(predict_img > 128)
-        predict_img[rows, cols] = 255
+        # predict_img = np.empty(shape=(512, 512), dtype=np.uint8)
+        # predict_img[:, :] = predict_temp[0, :, :, 0] * 255
+        #
+        # predict_rgb_img = np.zeros(shape=(512, 512, 3), dtype=np.uint8)
+        # predict_rgb_img[:, :, 2] = predict_img
+        #
+        # (rows, cols) = np.where(predict_img > 128)
+        # predict_img[rows, cols] = 255
 
         # for _ in range(20):
         #     predict_img = cv2.resize(predict_img, dsize=(test_img_rows * 8, test_img_cols * 8),
@@ -116,12 +114,13 @@ def main():
     # ex_info = 'u2net_dice'
     # ex_info = 'u2net_dice_02aug30000'
     # ex_info = 'u2net_bin_02aug10000'
-    ex_info = 'u2net_dice_02aug42000'
+    # ex_info = 'u2net_dice_02aug42000'
+    ex_info = 'u2net_seg'
 
     checkpoint_save_path = './checkpoint/' + ex_info + '.ckpt'
 
     test_file_path = './data/res/sample/'
-    predict_save_path = './data/res/predict2/'
+    predict_save_path = './data/res/predict3/'
 
     start_time = datetime.datetime.now()
 

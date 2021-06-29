@@ -1,6 +1,7 @@
 # coding=utf-8
 import cv2
 import numpy as np
+import tensorflow as tf
 import datetime
 import os
 from tqdm import tqdm
@@ -13,11 +14,18 @@ from data_utils.label_utils import get_point, fit_interpolation, draw_line
 
 np.set_printoptions(threshold=np.inf)
 
-label = cv2.imread('./data/temp/celeb_edge/0.png', 0)
-(rows, cols) = np.where(label == 6)
-print(len(rows))
-label = label * 15
-cv2.imwrite('./data/temp/temp/0_seg.png', label)
+B = tf.constant([[[0.1, 0.1, 0.8], [0.1, 0.1, 0.8], [0.1, 0.1, 0.8]],
+                 [[0.2, 0.7, 0.1], [0.2, 0.7, 0.1], [0.2, 0.7, 0.1]],
+                 [[0.6, 0.2, 0.2], [0.6, 0.2, 0.2], [0.6, 0.2, 0.2]]])
+predict_tensor = tf.math.argmax(B, 2)
+predict = np.array(predict_tensor)
+print(predict)
+
+# label = cv2.imread('./data/temp/celeb_edge/0.png', 0)
+# (rows, cols) = np.where(label == 6)
+# print(len(rows))
+# label = label * 15
+# cv2.imwrite('./data/temp/temp/0_seg.png', label)
 
 # img_list = glob('./data/res/con_temp/' + '*.jpg')
 # label_list = glob('./data/res/con_temp/' + '*.png')

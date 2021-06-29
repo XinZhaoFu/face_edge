@@ -171,7 +171,7 @@ class train:
         model.compile(
             optimizer=optimizer,
             loss=tf.keras.losses.CategoricalCrossentropy(),
-            metrics=['accuracy', tf.keras.metrics.MeanIoU(20)]
+            metrics=['categorical_accuracy']
         )
 
         if os.path.exists(self.checkpoint_input_path + '.index') and self.load_weights:
@@ -242,6 +242,7 @@ def train_init():
                 data_augmentation=args.data_augmentation,
                 learning_rate=args.learning_rate,
                 ex_info=ex_info)
+
     history = seg.model_train()
     plot_learning_curves(history, plt_name)
 
