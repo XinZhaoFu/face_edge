@@ -48,7 +48,7 @@ def parseArgs():
     parser.add_argument('--epochs',
                         dest='epochs',
                         help='epochs',
-                        default=0,
+                        default=1,
                         type=int)
     parser.add_argument('--batch_size',
                         dest='batch_size',
@@ -118,6 +118,8 @@ class train:
         self.val_datasets = data_loader.load_val_data(load_file_number=self.load_val_file_number)
         self.class_weight = np.array([0.5073703301521681, 34.419783081421244])
 
+        print(self.train_datasets)
+
     def model_train(self):
         """
         可多卡训练
@@ -168,8 +170,8 @@ class train:
         # )
         model.compile(
             optimizer=optimizer,
-            loss=tf.keras.losses.SparseCategoricalCrossentropy(),
-            metrics=tf.keras.metrics.Accuracy()
+            loss=tf.keras.losses.CategoricalCrossentropy(),
+            metrics=['accuracy', tf.keras.metrics.MeanIoU(20)]
         )
 
         if os.path.exists(self.checkpoint_input_path + '.index') and self.load_weights:
@@ -180,7 +182,7 @@ class train:
 
         checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
             filepath=self.checkpoint_save_path,
-            monitor='val_precision',
+            monitor='val_loss',
             save_weights_only=True,
             save_best_only=True,
             mode='auto',
@@ -195,7 +197,7 @@ class train:
             callbacks=[checkpoint_callback]
         )
 
-        if self.epochs == 0:
+        if self.epochs == 1:
             # 一般都是训练前专门看一下信息 所以正常训练时就不显示了 主要还是tmux不能上翻 有的时候会遮挡想看的信息
             model.summary()
 
