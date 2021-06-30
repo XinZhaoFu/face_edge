@@ -1,10 +1,11 @@
 from glob import glob
-import numpy as np
 import cv2
 import datetime
 from tqdm import tqdm
-from label_utils import get_contour_pupil_label, get_nose_label, gridMask, cutout, \
-    random_color_scale, random_filling, random_crop
+
+from data_utils.label_utils import get_class_code, code_label, overlay_label, get_nose_label
+from label_utils import get_contour_pupil_label, gridMask, cutout, \
+    random_filling, random_crop
 from utils import recreate_dir
 
 """
@@ -33,51 +34,13 @@ label class         name
 """
 
 
-def get_class_code(class_label):
-    dict_class_code = {'skin': 1, 'l_brow': 2, 'r_brow': 3, 'l_eye': 4, 'r_eye': 5, 'nose': 6, 'u_lip': 7,
-                       'mouth': 8, 'l_lip': 9, 'hair': 10, 'neck': 11, 'l_ear': 12, 'r_ear': 13, 'cloth': 14,
-                       'ear_r': 15, 'hat': 16, 'eye_g': 17, 'neck_l': 18}
-    return dict_class_code[class_label]
-
-
-def code_label(label, class_code):
-    """
-    转为数字标签
-    鼻子的编码为6 若不要原生鼻子 则将其转为皮肤 皮肤编码为1
-
-    :param label:
-    :param class_code:
-    :return:
-    """
-    # if class_code == 6:
-    #     class_code = 1
-    (rows, cols) = np.where(label == 255)
-    label[rows, cols] = class_code
-    return label
-
-
-def overlay_label(priority_labels, priority_labels_class_code):
-    """
-    将所有的label依次进行覆盖
-
-    :param priority_labels_class_code:
-    :param priority_labels:
-    :return:
-    """
-    con_label = np.array(priority_labels[0], dtype=np.uint8)
-    for label, code in zip(priority_labels[1:], priority_labels_class_code[1:]):
-        (rows, cols) = np.where(label == code)
-        con_label[rows, cols] = code
-
-    return con_label
-
-
-def concat_label(labels, class_codes, priority=None):
+def concat_label(labels, class_codes, priority=None, is_edge=True):
     """
     合并各类数字标签
     同时需要注意遮盖问题 目前的优先级是预估的 不一定是准确的
     labels 和 class_codes的索引需要对应
 
+    :param is_edge:
     :param priority:
     :param class_codes:
     :param labels:
@@ -93,7 +56,7 @@ def concat_label(labels, class_codes, priority=None):
         if pri_code in class_codes:
             index_class_codes = class_codes.index(pri_code)
             label = labels[index_class_codes]
-            label = code_label(label, pri_code)
+            label = code_label(label, pri_code, is_edge=is_edge)
             priority_labels.append(label)
             priority_labels_class_code.append(pri_code)
 
@@ -102,7 +65,7 @@ def concat_label(labels, class_codes, priority=None):
     return con_label
 
 
-def get_semantic_label(label_path, save_path):
+def get_semantic_label(label_path, save_path, is_edge=True):
     """
     获取语义分割标签
 
@@ -137,7 +100,7 @@ def get_semantic_label(label_path, save_path):
         if last_label_name != cur_label_name:
             last_label_name_easy = str(int(last_label_name))
 
-            res_label = concat_label(labels, class_codes)
+            res_label = concat_label(labels, class_codes, is_edge=is_edge)
             cv2.imwrite(save_path + last_label_name_easy + '.png', res_label)
 
             last_label_name = cur_label_name
@@ -146,7 +109,7 @@ def get_semantic_label(label_path, save_path):
 
         if index == len(label_file_list) - 1:
             cur_label_name_easy = str(int(cur_label_name))
-            res_label = concat_label(labels, class_codes)
+            res_label = concat_label(labels, class_codes, is_edge=is_edge)
             cv2.imwrite(save_path + cur_label_name_easy + '.png', res_label)
 
 
@@ -156,7 +119,8 @@ def add_contour_nose_label(img_path,
                            nose_point_file_path,
                            save_label_path,
                            save_img_path,
-                           is_augmentation=False):
+                           is_augmentation=False,
+                           is_edge=True):
     """
     在语义分割标签的基础上获得含有虹膜和鼻子的轮廓标签  并进行离线的数据扩增
 
@@ -201,30 +165,18 @@ def add_contour_nose_label(img_path,
                                             contour_point_file_path=contour_point_path,
                                             img_rows=img_rows,
                                             img_cols=img_cols,
-                                            is_canny=False)
-        # con_label = cv2.Canny(con_label, 0, 0)
-        # con_label = get_nose_label(label=con_label,
-        #                            img_rows=img_rows,
-        #                            img_cols=img_cols,
-        #                            nose_point_file_path=nose_point_path,
-        #                            draw_type=0)
+                                            is_canny=is_edge)
+        if is_edge:
+            con_label = get_nose_label(label=con_label,
+                                       img_rows=img_rows,
+                                       img_cols=img_cols,
+                                       nose_point_file_path=nose_point_path,
+                                       draw_type=0)
 
         cv2.imwrite(save_label_path + label_name + '.png', con_label)
 
         if is_augmentation:
             cv2.imwrite(save_img_path + img_name + '.jpg', img)
-
-            # get_senses_augmentation
-            # aug_name_list = ['_face', '_left_eye', '_right_eye', '_nose', '_lip']
-            # aug_img, aug_label, aug_flag = get_senses_augmentation(label=con_label,
-            #                                                        points_file_path=nose_point_path,
-            #                                                        img=img)
-            # aug_index = 0
-            # for index, aug_name in enumerate(aug_name_list):
-            #     if aug_flag[index] == 1:
-            #         cv2.imwrite(save_img_path + img_name + aug_name + '.jpg', aug_img[aug_index])
-            #         cv2.imwrite(save_label_path + label_name + aug_name + '.png', aug_label[aug_index])
-            #         aug_index += 1
 
             # random_crop
             random_crop_num = 1
@@ -256,31 +208,36 @@ def add_contour_nose_label(img_path,
 
 
 def main():
-    save_semantic_path = '../data/celeb_semantic_label/'
-    save_label_path = '../data/celeb_edge/'
-    save_img_path = '../data/celeb_aug_img/'
-    contour_point_file_path = '../data/celeb_eye_contour/'
-    nose_point_file_path = '../data/celeb_106points/'
-    img_path = '../data/celeb_ori_img/'
-    label_path = '../data/celeb_ori_label/'
-
-    # save_semantic_path = '../data/temp/celeb_semantic_label/'
-    # save_label_path = '../data/temp/celeb_edge/'
-    # save_img_path = '../data/temp/celeb_aug_img/'
-    # contour_point_file_path = '../data/temp/celeb_eye_contour/'
-    # nose_point_file_path = '../data/temp/celeb_106points/'
-    # img_path = '../data/temp/celeb_ori_img/'
-    # label_path = '../data/temp/celeb_ori_label/'
-
     is_get_semantic_label = True
     is_augmentation = True
+    is_edge = False
+    is_all_file = True
+    is_recreate = True
 
-    recreate_dir(save_label_path)
-    recreate_dir(save_img_path)
+    if is_all_file:
+        save_semantic_path = '../data/celeb_semantic_label/'
+        save_label_path = '../data/celeb_edge/'
+        save_img_path = '../data/celeb_aug_img/'
+        contour_point_file_path = '../data/celeb_eye_contour/'
+        nose_point_file_path = '../data/celeb_106points/'
+        img_path = '../data/celeb_ori_img/'
+        label_path = '../data/celeb_ori_label/'
+    else:
+        save_semantic_path = '../data/temp/celeb_semantic_label/'
+        save_label_path = '../data/temp/celeb_edge/'
+        save_img_path = '../data/temp/celeb_aug_img/'
+        contour_point_file_path = '../data/temp/celeb_eye_contour/'
+        nose_point_file_path = '../data/temp/celeb_106points/'
+        img_path = '../data/temp/celeb_ori_img/'
+        label_path = '../data/temp/celeb_ori_label/'
+
+    if is_recreate:
+        recreate_dir(save_label_path)
+        recreate_dir(save_img_path)
 
     if is_get_semantic_label is True:
         print('[INFO] 重新获得语义label')
-        get_semantic_label(label_path, save_semantic_path)
+        get_semantic_label(label_path, save_semantic_path, is_edge=is_edge)
 
     print('[INFO] 进行数据扩增')
     add_contour_nose_label(img_path=img_path,
@@ -289,7 +246,8 @@ def main():
                            nose_point_file_path=nose_point_file_path,
                            save_label_path=save_label_path,
                            save_img_path=save_img_path,
-                           is_augmentation=is_augmentation)
+                           is_augmentation=is_augmentation,
+                           is_edge=is_edge)
 
 
 if __name__ == '__main__':

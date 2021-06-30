@@ -132,7 +132,7 @@ def nose_side_fit(point_list):
     point_x = point_list[:, 1]
     point_y = point_list[:, 0]
 
-    fit_point_x, fit_point_y = fit_interpolation(point_x, point_y, 2, (point_x[0] + point_x[1])//2, point_x[-1], 3)
+    fit_point_x, fit_point_y = fit_interpolation(point_x, point_y, 2, (point_x[0] + point_x[1]) // 2, point_x[-1], 3)
 
     fit_point = np.empty(shape=(len(fit_point_x), 2), dtype=np.int32)
     fit_point[:, 1] = fit_point_x
@@ -253,7 +253,7 @@ def draw_line(label, point_list, color, thickness):
     :return:
     """
     for index in range(1, len(point_list)):
-        point1 = (int(point_list[index-1][0]), int(point_list[index-1][1]))
+        point1 = (int(point_list[index - 1][0]), int(point_list[index - 1][1]))
         point2 = (int(point_list[index][0]), int(point_list[index][1]))
 
         cv2.line(label, point1, point2, color, thickness, cv2.LINE_AA)
@@ -475,7 +475,7 @@ def get_nose_by_seg_label(label, small_rate=1.0):
     new_centroid_row, new_centroid_col = int(small_rate * ori_centroid_row), int(small_rate * ori_centroid_col)
 
     temp[ori_centroid_row - new_centroid_row: ori_centroid_row - new_centroid_row + s_rows,
-         ori_centroid_col - new_centroid_col: ori_centroid_col - new_centroid_col + s_cols] = nose_label[:, :]
+    ori_centroid_col - new_centroid_col: ori_centroid_col - new_centroid_col + s_cols] = nose_label[:, :]
 
     (temp_rows, temp_cols) = get_target_point(temp, 6)
     label[temp_rows, temp_cols] = 6
@@ -524,9 +524,9 @@ def random_crop(img, label):
         crop_label = np.empty(shape=(random_crop_length, random_crop_length), dtype=np.uint8)
 
         crop_img[:, :, :] = img[random_crop_row_init:random_crop_row_init + random_crop_length,
-                                random_crop_col_init:random_crop_col_init + random_crop_length, :]
+                            random_crop_col_init:random_crop_col_init + random_crop_length, :]
         crop_label[:, :] = label[random_crop_row_init:random_crop_row_init + random_crop_length,
-                                 random_crop_col_init:random_crop_col_init + random_crop_length]
+                           random_crop_col_init:random_crop_col_init + random_crop_length]
     else:
         resize_rate = label_rows / img_rows
         assert resize_rate == label_cols / img_cols
@@ -547,9 +547,9 @@ def random_crop(img, label):
         crop_label = np.empty(shape=(random_crop_label_length, random_crop_label_length), dtype=np.uint8)
 
         crop_img[:, :, :] = img[random_crop_img_row_init:random_crop_img_row_init + random_crop_img_length,
-                                random_crop_img_col_init:random_crop_img_col_init + random_crop_img_length, :]
+                            random_crop_img_col_init:random_crop_img_col_init + random_crop_img_length, :]
         crop_label[:, :] = label[random_crop_label_row_init:random_crop_label_row_init + random_crop_label_length,
-                                 random_crop_label_col_init:random_crop_label_col_init + random_crop_label_length]
+                           random_crop_label_col_init:random_crop_label_col_init + random_crop_label_length]
 
     return crop_img, crop_label
 
@@ -563,8 +563,8 @@ def random_color_scale(img, alpha_rate=0.2, base_beta=15):
     :param base_beta:
     :return:
     """
-    alpha = uniform(1-alpha_rate, 1+alpha_rate)
-    beta = randint(0-base_beta, base_beta)
+    alpha = uniform(1 - alpha_rate, 1 + alpha_rate)
+    beta = randint(0 - base_beta, base_beta)
     img = img * alpha + beta
 
     return img
@@ -623,27 +623,19 @@ def gridMask(img, rate=0.1):
 
     fill_img = np.zeros((fill_img_rows_length, fill_img_cols_length, img_channel))
     fill_img[int(0.1 * img_rows):int(0.1 * img_rows) + img_rows,
-             int(0.1 * img_cols):int(0.1 * img_cols) + img_cols] = img
+    int(0.1 * img_cols):int(0.1 * img_cols) + img_cols] = img
 
     for width_num in range(10):
         for length_num in range(10):
             length_base_patch = int(0.1 * fill_img_rows_length * length_num) + rows_offset
             width_base_patch = int(0.1 * fill_img_cols_length * width_num) + cols_offset
             fill_img[length_base_patch:length_base_patch + rows_mask_length,
-                     width_base_patch:width_base_patch + cols_mask_length] = 0
+            width_base_patch:width_base_patch + cols_mask_length] = 0
 
     img = fill_img[int(0.1 * img_rows):int(0.1 * img_rows) + img_rows,
-                   int(0.1 * img_cols):int(0.1 * img_cols) + img_cols]
+          int(0.1 * img_cols):int(0.1 * img_cols) + img_cols]
 
     return img
-
-
-def get_sense_crop_img_label(img, label, points, point_x_resize, point_y_resize):
-    img = img[int(points[2] / point_y_resize):int(points[3] / point_y_resize),
-              int(points[0] / point_x_resize):int(points[1] / point_x_resize), :]
-    label = label[points[2]:points[3], points[0]:points[1]]
-
-    return img, label
 
 
 def check_coordinate(coordinate):
@@ -669,24 +661,47 @@ def random_filling(img, label):
 
     random_x, random_y = randint(0, 256), randint(0, 256)
 
-    filling_img[random_x:random_x+256, random_y:random_y+256] = img
-    filling_label[random_x:random_x+256, random_y:random_y+256] = label
+    filling_img[random_x:random_x + 256, random_y:random_y + 256] = img
+    filling_label[random_x:random_x + 256, random_y:random_y + 256] = label
 
     return filling_img, filling_label
 
 
-# def random_crop(img, label):
-#
-#     random_x, random_y = randint(0, 512), randint(0, 512)
-#     crop_img = np.empty(shape=(512, 512, 3))
-#     crop_label = np.empty(shape=(256, 256))
-#
-#     crop_img = img[random_x:random_x + 512, random_y:random_y + 512]
-#     crop_label = label[random_x//2:random_x//2 + 256, random_y//2:random_y//2 + 256]
-#
-#     crop_label = cv2.resize(crop_label, dsize=(512, 512), interpolation=cv2.INTER_NEAREST)
-#
-#     return crop_img, crop_label
+def get_class_code(class_label):
+    dict_class_code = {'skin': 1, 'l_brow': 2, 'r_brow': 3, 'l_eye': 4, 'r_eye': 5, 'nose': 6, 'u_lip': 7,
+                       'mouth': 8, 'l_lip': 9, 'hair': 10, 'neck': 11, 'l_ear': 12, 'r_ear': 13, 'cloth': 14,
+                       'ear_r': 15, 'hat': 16, 'eye_g': 17, 'neck_l': 18}
+    return dict_class_code[class_label]
 
 
+def code_label(label, class_code, is_edge=True):
+    """
+    转为数字标签
+    鼻子的编码为6 若不要原生鼻子 则将其转为皮肤 皮肤编码为1
 
+    :param is_edge:
+    :param label:
+    :param class_code:
+    :return:
+    """
+    if not is_edge and class_code == 6:
+        class_code = 1
+    (rows, cols) = np.where(label == 255)
+    label[rows, cols] = class_code
+    return label
+
+
+def overlay_label(priority_labels, priority_labels_class_code):
+    """
+    将所有的label依次进行覆盖
+
+    :param priority_labels_class_code:
+    :param priority_labels:
+    :return:
+    """
+    con_label = np.array(priority_labels[0], dtype=np.uint8)
+    for label, code in zip(priority_labels[1:], priority_labels_class_code[1:]):
+        (rows, cols) = np.where(label == code)
+        con_label[rows, cols] = code
+
+    return con_label

@@ -150,6 +150,7 @@ class train:
         #               num_class=1,
         #               end_activation='sigmoid',
         #               only_output=True)
+
         model = U2Net(rsu_middle_filters=16,
                       rsu_out_filters=32,
                       num_class=20,

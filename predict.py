@@ -11,7 +11,7 @@ import tensorflow as tf
 import numpy as np
 import datetime
 from tqdm import tqdm
-from loss.loss import dice_loss, binary_focal_loss, mix_dice_focal_loss
+from data_utils.utils import face_crop, edge_smooth
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
@@ -22,7 +22,7 @@ if len(gpus) > 0:
     tf.config.experimental.set_memory_growth(gpus[0], True)
 
 
-def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, img_name_complement):
+def edge_predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, img_name_complement):
     """
     这里batchsize形同为1  需要一批多个的话得改一下
 
@@ -35,73 +35,93 @@ def predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, im
     """
     print('[info]模型加载 图片加载')
     # 加载模型
-    # model = U2Net(rsu_middle_filters=16,
-    #               rsu_out_filters=32,
-    #               num_class=1,
-    #               end_activation='sigmoid',
-    #               only_output=True)
+    model = U2Net(rsu_middle_filters=16,
+                  rsu_out_filters=32,
+                  num_class=1,
+                  end_activation='sigmoid',
+                  only_output=True)
+
+    model.load_weights(checkpoint_save_path)
+
+    test_file_path_list = glob.glob(test_file_path + '*.jpg')
+
+    for test_file in tqdm(test_file_path_list):
+        test_img, test_img_name = get_predict_img(test_file)
+        test_img_name = img_name_complement + '_' + ex_info + '_' + test_img_name + '.png'
+
+        predict_temp = model.predict(test_img)
+
+        predict_img = np.empty(shape=(512, 512), dtype=np.uint8)
+        predict_img[:, :] = predict_temp[0, :, :, 0] * 255
+
+        # predict_rgb_img = np.zeros(shape=(512, 512, 3), dtype=np.uint8)
+        # predict_rgb_img[:, :, 2] = predict_img
+
+        (rows, cols) = np.where(predict_img > 128)
+        predict_img[rows, cols] = 255
+
+        predict_img = edge_smooth(predict_img)
+
+        cv2.imwrite(predict_save_path + test_img_name, predict_img)
+        # cv2.imwrite(predict_save_path + test_img_name, predict_rgb_img)
+
+
+def seg_predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, img_name_complement):
+    """
+    这里batchsize形同为1  需要一批多个的话得改一下
+
+    :param img_name_complement:
+    :param ex_info:
+    :param checkpoint_save_path:
+    :param test_file_path:
+    :param predict_save_path:
+    :return:
+    """
+    print('[info]模型加载 图片加载')
+    # 加载模型
+
     model = U2Net(rsu_middle_filters=16,
                   rsu_out_filters=32,
                   num_class=20,
                   end_activation='softmax',
                   only_output=True)
 
-    # model.compile(optimizer='Adam',
-    #               loss=dice_loss(),
-    #               metrics=['accuracy'])
     model.load_weights(checkpoint_save_path)
 
     test_file_path_list = glob.glob(test_file_path + '*.jpg')
-    print(len(test_file_path_list))
-    test_img_np = np.empty(shape=(1, 512, 512, 3), dtype=np.float32)
 
-    test_file_path_list = tqdm(test_file_path_list)
-    for test_file in test_file_path_list:
-        test_img = cv2.imread(test_file)
-        test_img_rows, test_img_cols, test_img_channel = test_img.shape
-        if (test_img_rows / test_img_cols) > 1.1:
-            test_img = test_img[:test_img_cols, :, :]
-            test_img_rows = test_img_cols
-        if (test_img_rows / test_img_cols) < 0.9:
-            test_img = test_img[:, :test_img_rows, :]
-            test_img_cols = test_img_rows
-
-        test_img = cv2.resize(test_img, dsize=(512, 512))
-        test_img = test_img / 255.
-        test_img_np[0, :, :, :] = test_img[:, :, :]
-        test_img_name = (test_file.split('/')[-1]).split('.')[0]
-
+    for test_file in tqdm(test_file_path_list):
+        test_img, test_img_name = get_predict_img(test_file)
         test_img_name = img_name_complement + '_' + ex_info + '_' + test_img_name + '.png'
 
-        predict_temp = model.predict(test_img_np)
+        predict_temp = model.predict(test_img)
 
-        # seg
         predict_temp = tf.math.argmax(predict_temp, 3)
         predict_temp = np.array(predict_temp)
         predict_temp = np.reshape(predict_temp, newshape=(512, 512))
         predict_img = np.empty(shape=(512, 512), dtype=np.uint8)
-        predict_img[:, :] = predict_temp[:, :] * 15
+        predict_img[:, :] = predict_temp[:, :] * 12
+        predict_img = cv2.Canny(predict_img, 0 ,0)
 
-        # predict_img = np.empty(shape=(512, 512), dtype=np.uint8)
-        # predict_img[:, :] = predict_temp[0, :, :, 0] * 255
-        #
-        # predict_rgb_img = np.zeros(shape=(512, 512, 3), dtype=np.uint8)
-        # predict_rgb_img[:, :, 2] = predict_img
-        #
-        # (rows, cols) = np.where(predict_img > 128)
-        # predict_img[rows, cols] = 255
-
-        # for _ in range(20):
-        #     predict_img = cv2.resize(predict_img, dsize=(test_img_rows * 8, test_img_cols * 8),
-        #                              interpolation=cv2.INTER_AREA)
-        #     predict_img = cv2.resize(predict_img, dsize=(test_img_rows, test_img_cols),
-        #                              interpolation=cv2.INTER_AREA)
-
-        # _, predict_img = cv2.threshold(predict_img, 50, 255, cv2.THRESH_BINARY)
         cv2.imwrite(predict_save_path + test_img_name, predict_img)
 
-        # cv2.imwrite(predict_save_path + test_img_name, predict_rgb_img)
-        test_file_path_list.set_description('生成中')
+
+def get_predict_img(test_file_path):
+    """
+    对人脸进行裁剪 并将数据格式与网络输入相对应
+
+    :param test_file_path:
+    :return:
+    """
+    test_img_name = (test_file_path.split('/')[-1]).split('.')[0]
+    test_img = cv2.imread(test_file_path)
+    test_img = face_crop(test_img)
+
+    test_img = cv2.resize(test_img, dsize=(512, 512))
+    test_img = np.array(test_img / 255.)
+    test_img = np.reshape(test_img, newshape=(1, 512, 512, 3))
+
+    return test_img, test_img_name
 
 
 def main():
@@ -127,8 +147,8 @@ def main():
     tran_tab = str.maketrans('- :.', '____')
     img_name_complement = str(start_time).translate(tran_tab)
 
-    predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, img_name_complement)
-    # integration_predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, img_name_complement)
+    # edge_predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, img_name_complement)
+    seg_predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, img_name_complement)
 
     end_time = datetime.datetime.now()
     print('time:\t' + str(end_time - start_time).split('.')[0])

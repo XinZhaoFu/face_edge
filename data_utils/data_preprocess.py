@@ -94,7 +94,7 @@ def load_and_preprocess_image_label(img_path, label_path):
 
 def load_and_preprocess_image_onehot_label(img_path, label_path):
     """
-    对img和label进行读取预处理
+    对img和label进行读取预处理 其中label以onehot的形式
 
     :param label_path:
     :param img_path:

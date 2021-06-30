@@ -222,6 +222,19 @@ def filling(img):
     """
     img_rows, img_cols, img_channel = img.shape
     filling_img = np.zeros(shape=(img_rows + 512, img_cols + 512, 3), dtype=np.uint8)
-    filling_img[256:img_rows+256, 256:img_cols+256] = img[:, :]
+    filling_img[256:img_rows + 256, 256:img_cols + 256] = img[:, :]
 
     return filling_img
+
+
+def edge_smooth(label):
+    """
+
+    :param label:
+    :return:
+    """
+    label_rows, label_cols = label.shape
+    for _ in range(20):
+        label = cv2.resize(label, dsize=(label_rows * 8, label_cols * 8), interpolation=cv2.INTER_AREA)
+        label = cv2.resize(label, dsize=(label_rows, label_cols), interpolation=cv2.INTER_AREA)
+    return label

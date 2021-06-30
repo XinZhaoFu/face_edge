@@ -14,12 +14,19 @@ from data_utils.label_utils import get_point, fit_interpolation, draw_line
 
 np.set_printoptions(threshold=np.inf)
 
-B = tf.constant([[[0.1, 0.1, 0.8], [0.1, 0.1, 0.8], [0.1, 0.1, 0.8]],
-                 [[0.2, 0.7, 0.1], [0.2, 0.7, 0.1], [0.2, 0.7, 0.1]],
-                 [[0.6, 0.2, 0.2], [0.6, 0.2, 0.2], [0.6, 0.2, 0.2]]])
-predict_tensor = tf.math.argmax(B, 2)
-predict = np.array(predict_tensor)
-print(predict)
+face_detection = cv2.CascadeClassifier()
+img = cv2.imread('./data/res/sample/demo1.jpg', 0)
+faces = face_detection.detectMultiScale(img, 1, 10)
+print(faces)
+
+
+#
+# B = tf.constant([[[0.1, 0.1, 0.8], [0.1, 0.1, 0.8], [0.1, 0.1, 0.8]],
+#                  [[0.2, 0.7, 0.1], [0.2, 0.7, 0.1], [0.2, 0.7, 0.1]],
+#                  [[0.6, 0.2, 0.2], [0.6, 0.2, 0.2], [0.6, 0.2, 0.2]]])
+# predict_tensor = tf.math.argmax(B, 2)
+# predict = np.array(predict_tensor)
+# print(predict)
 
 # label = cv2.imread('./data/temp/celeb_edge/0.png', 0)
 # (rows, cols) = np.where(label == 6)
