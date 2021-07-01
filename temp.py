@@ -10,14 +10,21 @@ from data_utils.label_utils import draw_contour_pupil
 from data_utils.utils import clean_val_file
 from PIL import Image
 from scipy.interpolate import UnivariateSpline
-from data_utils.label_utils import get_point, fit_interpolation, draw_line
+from data_utils.label_utils import get_point, fit_interpolation, draw_line, get_lower_nose_edge
 
 np.set_printoptions(threshold=np.inf)
 
-face_detection = cv2.CascadeClassifier()
-img = cv2.imread('./data/res/sample/demo1.jpg', 0)
-faces = face_detection.detectMultiScale(img, 1, 10)
-print(faces)
+label = cv2.imread('./data/temp/celeb_semantic_label/0.png', 0)
+rows, cols = get_lower_nose_edge(label)
+print(label.shape)
+cv2.imwrite('./data/temp/temp/0_nose_test.png', label_edge)
+
+# print(1.01**3650)
+# 5929 4485 7206 9368
+# face_detection = cv2.CascadeClassifier()
+# img = cv2.imread('./data/res/sample/demo1.jpg', 0)
+# faces = face_detection.detectMultiScale(img, 1, 10)
+# print(faces)
 
 
 #

@@ -118,8 +118,6 @@ class train:
         self.val_datasets = data_loader.load_val_data(load_file_number=self.load_val_file_number)
         self.class_weight = np.array([0.5073703301521681, 34.419783081421244])
 
-        print(self.train_datasets)
-
     def model_train(self):
         """
         可多卡训练
@@ -145,17 +143,17 @@ class train:
 
         # model = BisenetV2(detail_filters=32, aggregation_filters=32, num_class=1, final_act='sigmoid')
 
-        # model = U2Net(rsu_middle_filters=16,
-        #               rsu_out_filters=32,
-        #               num_class=1,
-        #               end_activation='sigmoid',
-        #               only_output=True)
-
         model = U2Net(rsu_middle_filters=16,
                       rsu_out_filters=32,
-                      num_class=20,
-                      end_activation='softmax',
+                      num_class=1,
+                      end_activation='sigmoid',
                       only_output=True)
+
+        # model = U2Net(rsu_middle_filters=16,
+        #               rsu_out_filters=32,
+        #               num_class=20,
+        #               end_activation='softmax',
+        #               only_output=True)
 
         if self.learning_rate > 0:
             optimizer = tf.keras.optimizers.SGD(learning_rate=self.learning_rate)
@@ -164,16 +162,16 @@ class train:
             optimizer = 'Adam'
             print('[INFO] 使用Adam')
 
-        # model.compile(
-        #     optimizer=optimizer,
-        #     loss=dice_loss(),
-        #     metrics=[tf.keras.metrics.Precision()]
-        # )
         model.compile(
             optimizer=optimizer,
-            loss=tf.keras.losses.CategoricalCrossentropy(),
-            metrics=['categorical_accuracy']
+            loss=tf.keras.losses.BinaryCrossentropy(),
+            metrics=[tf.keras.metrics.Precision()]
         )
+        # model.compile(
+        #     optimizer=optimizer,
+        #     loss=tf.keras.losses.CategoricalCrossentropy(),
+        #     metrics=['categorical_accuracy']
+        # )
 
         if os.path.exists(self.checkpoint_input_path + '.index') and self.load_weights:
             print("[INFO] -------------------------------------------------")
@@ -224,8 +222,8 @@ def train_init():
     # ex_info = 'u2net_dice_02aug42000'
     # ex_info = 'u2net_bin_02aug10000'
     # ex_info = 'u2net_bin_01aug16000'
-    # ex_info = 'u2net_dice_02aug42000'
-    ex_info = 'u2net_seg'
+    ex_info = 'u2net_dice_02aug42000'
+    # ex_info = 'u2net_seg'
 
     print('[INFO] 实验名称：' + ex_info)
 

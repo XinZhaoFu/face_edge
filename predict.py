@@ -101,7 +101,7 @@ def seg_predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info
         predict_temp = np.reshape(predict_temp, newshape=(512, 512))
         predict_img = np.empty(shape=(512, 512), dtype=np.uint8)
         predict_img[:, :] = predict_temp[:, :] * 12
-        predict_img = cv2.Canny(predict_img, 0 ,0)
+        # predict_img = cv2.Canny(predict_img, 0, 0)
 
         cv2.imwrite(predict_save_path + test_img_name, predict_img)
 
