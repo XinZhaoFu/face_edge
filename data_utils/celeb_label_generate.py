@@ -173,8 +173,8 @@ def main():
     is_edge = False
     is_lower_nose_edge = True
     is_seg = False
-    is_all_file = True
-    is_recreate = True
+    is_all_file = False
+    is_recreate = False
 
     if is_all_file:
         save_semantic_path = '../data/celeb_semantic_label/'

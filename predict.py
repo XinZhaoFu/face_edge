@@ -134,8 +134,8 @@ def main():
     # ex_info = 'u2net_dice'
     # ex_info = 'u2net_dice_02aug30000'
     # ex_info = 'u2net_bin_02aug10000'
-    # ex_info = 'u2net_dice_02aug42000'
-    ex_info = 'u2net_seg'
+    ex_info = 'u2net_dice_02aug42000'
+    # ex_info = 'u2net_seg'
 
     checkpoint_save_path = './checkpoint/' + ex_info + '.ckpt'
 
@@ -147,8 +147,8 @@ def main():
     tran_tab = str.maketrans('- :.', '____')
     img_name_complement = str(start_time).translate(tran_tab)
 
-    # edge_predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, img_name_complement)
-    seg_predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, img_name_complement)
+    edge_predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, img_name_complement)
+    # seg_predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info, img_name_complement)
 
     end_time = datetime.datetime.now()
     print('time:\t' + str(end_time - start_time).split('.')[0])

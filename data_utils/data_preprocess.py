@@ -61,7 +61,7 @@ def get_img_mask_list(file_path, batch_size, file_number=0, data_augmentation=0)
 
     image_label_ds = tf.data.Dataset.from_tensor_slices((img_file_path_list, label_file_path_list))
     # image_label_ds = image_label_ds.map(load_and_preprocess_image_label, num_parallel_calls=tf.data.AUTOTUNE)
-    image_label_ds = image_label_ds.map(load_and_preprocess_image_onehot_label, num_parallel_calls=tf.data.AUTOTUNE)
+    image_label_ds = image_label_ds.map(load_and_preprocess_image_label, num_parallel_calls=tf.data.AUTOTUNE)
     # image_label_ds = image_label_ds.cache()
     image_label_ds = image_label_ds.shuffle(buffer_size=batch_size * 8)
     image_label_ds = image_label_ds.batch(batch_size=batch_size)

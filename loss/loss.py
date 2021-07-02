@@ -9,6 +9,7 @@ def dice_loss(smooth=1.0):
     :param smooth:
     :return:
     """
+
     def dice_loss_fixed(y_true, y_pred):
         """
         模型最后的激活函数需要为sigmoid
@@ -63,7 +64,7 @@ def binary_focal_loss(gamma=2.0, alpha=0.25):
 
 def mix_dice_focal_loss(focal_alpha=0.0001, smooth=1.0, gamma=2.0, alpha=0.25):
     """
-    哦 明明已经有现成的dice loss 和focal loss的代码 想直接调用 试了试没成功 那就干脆command c加command v了
+    哦 明明已经有现成的dice loss 和focal loss的代码 想直接调用 试了试没成功 那就干脆复制粘贴了
 
     :param focal_alpha:
     :param smooth:
@@ -71,6 +72,7 @@ def mix_dice_focal_loss(focal_alpha=0.0001, smooth=1.0, gamma=2.0, alpha=0.25):
     :param alpha:
     :return:
     """
+
     def mix_dice_focal_loss_fixed(y_true, y_pred):
         epsilon = tf.keras.backend.epsilon()
         y_true = tf.cast(y_true, tf.float32)
@@ -88,6 +90,7 @@ def mix_dice_focal_loss(focal_alpha=0.0001, smooth=1.0, gamma=2.0, alpha=0.25):
         dice_loss = 1 - (2.0 * intersection + smooth) / (y_true_sum + y_pred_sum + smooth)
 
         return 0.5 * focal_loss * focal_alpha + 0.5 * dice_loss
+
     return mix_dice_focal_loss_fixed
 
 
@@ -97,11 +100,13 @@ def binary_crossentropy_weight():
 
     :return:
     """
+
     def binary_crossentropy_weight_fixed(y_true, y_pred):
         sample_weight = [0.0145, 0.9854]
         bce = tf.keras.losses.BinaryCrossentropy()
         loss = bce(y_true, y_pred, sample_weight)
         return tf.reduce_sum(loss)
+
     return binary_crossentropy_weight_fixed
 
 
@@ -124,11 +129,14 @@ def u2net_bce_loss():
         loss6 = bce(y_true, y_pred[6])
         loss = loss0 + loss1 + loss2 + loss3 + loss4 + loss5 + loss6
         return tf.reduce_sum(loss)
+
     return bce_loss_fixed
+
 
 def dice_bce_loss():
     bce = tf.keras.losses.binary_crossentropy
     smooth = 1.0
+
     def dice_bce_loss_fixed(y_true, y_pred):
         y_true_sum = tf.reduce_sum(y_true)
         y_pred_sum = tf.reduce_sum(y_pred)
@@ -139,5 +147,5 @@ def dice_bce_loss():
         loss = dice_loss * 0.5 + bce_loss * 0.5
 
         return loss
-    return dice_bce_loss_fixed
 
+    return dice_bce_loss_fixed

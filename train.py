@@ -164,7 +164,7 @@ class train:
 
         model.compile(
             optimizer=optimizer,
-            loss=tf.keras.losses.BinaryCrossentropy(),
+            loss=dice_bce_loss(),
             metrics=[tf.keras.metrics.Precision()]
         )
         # model.compile(
@@ -181,7 +181,7 @@ class train:
 
         checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
             filepath=self.checkpoint_save_path,
-            monitor='val_loss',
+            monitor='val_precision:',
             save_weights_only=True,
             save_best_only=True,
             mode='auto',

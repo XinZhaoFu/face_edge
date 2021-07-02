@@ -734,7 +734,8 @@ def get_lower_nose_edge(semantic_label):
     if bbox is None:
         return label_edge
     nose_edge = cv2.Canny(nose_label, 0, 0)
-    nose_edge[:(bbox[0] + bbox[2]) // 2, :] = 0
+    temp_rows = bbox[0] + (bbox[2] - bbox[0]) // 3
+    nose_edge[:temp_rows, :] = 0
     (rows, cols) = np.where(nose_edge == 255)
     label_edge[rows, cols] = 255
 
