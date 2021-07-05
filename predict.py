@@ -46,7 +46,7 @@ def edge_predict(checkpoint_save_path, test_file_path, predict_save_path, ex_inf
     test_file_path_list = glob.glob(test_file_path + '*.jpg')
 
     for test_file in tqdm(test_file_path_list):
-        test_img, test_img_name = get_predict_img(test_file)
+        test_img, test_img_name = get_predict_img(test_file, is_crop=True)
         test_img_name = img_name_complement + '_' + ex_info + '_' + test_img_name + '.png'
 
         predict_temp = model.predict(test_img)
@@ -106,16 +106,18 @@ def seg_predict(checkpoint_save_path, test_file_path, predict_save_path, ex_info
         cv2.imwrite(predict_save_path + test_img_name, predict_img)
 
 
-def get_predict_img(test_file_path):
+def get_predict_img(test_file_path, is_crop=True):
     """
     对人脸进行裁剪 并将数据格式与网络输入相对应
 
+    :param is_crop:
     :param test_file_path:
     :return:
     """
     test_img_name = (test_file_path.split('/')[-1]).split('.')[0]
     test_img = cv2.imread(test_file_path)
-    test_img = face_crop(test_img)
+    if is_crop:
+        test_img = face_crop(test_img)
 
     test_img = cv2.resize(test_img, dsize=(512, 512))
     test_img = np.array(test_img / 255.)

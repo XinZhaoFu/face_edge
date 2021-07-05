@@ -103,7 +103,7 @@ class train:
         self.augmentation_rate = augmentation_rate
         self.learning_rate = learning_rate
         self.checkpoint_save_path = checkpoint_save_path + ex_info + '.ckpt'
-        # self.checkpoint_input_path = './checkpoint/' + 'u2net_dice_02aug30000' + '.ckpt'
+        # self.checkpoint_input_path = './checkpoint/' + 'u2net_dice_02aug42000' + '.ckpt'
         self.checkpoint_input_path = self.checkpoint_save_path
         print('[INFO] checkpoint_input_path:\t' + self.checkpoint_input_path)
 
@@ -134,20 +134,20 @@ class train:
 
         # model = DenseNet(filters=64, num_class=1, activation='sigmoid')
 
-        # model = UNet(semantic_filters=16,
-        #              detail_filters=32,
-        #              num_class=1,
-        #              semantic_num_cbr=1,
-        #              detail_num_cbr=6,
-        #              end_activation='sigmoid')
+        model = UNet(semantic_filters=16,
+                     detail_filters=32,
+                     num_class=1,
+                     semantic_num_cbr=1,
+                     detail_num_cbr=4,
+                     end_activation='sigmoid')
 
         # model = BisenetV2(detail_filters=32, aggregation_filters=32, num_class=1, final_act='sigmoid')
 
-        model = U2Net(rsu_middle_filters=16,
-                      rsu_out_filters=32,
-                      num_class=1,
-                      end_activation='sigmoid',
-                      only_output=True)
+        # model = U2Net(rsu_middle_filters=16,
+        #               rsu_out_filters=32,
+        #               num_class=1,
+        #               end_activation='sigmoid',
+        #               only_output=True)
 
         # model = U2Net(rsu_middle_filters=16,
         #               rsu_out_filters=32,
@@ -164,7 +164,7 @@ class train:
 
         model.compile(
             optimizer=optimizer,
-            loss=dice_bce_loss(),
+            loss=dice_loss(),
             metrics=[tf.keras.metrics.Precision()]
         )
         # model.compile(
@@ -181,7 +181,7 @@ class train:
 
         checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
             filepath=self.checkpoint_save_path,
-            monitor='val_precision:',
+            monitor='val_precision',
             save_weights_only=True,
             save_best_only=True,
             mode='auto',
@@ -222,8 +222,11 @@ def train_init():
     # ex_info = 'u2net_dice_02aug42000'
     # ex_info = 'u2net_bin_02aug10000'
     # ex_info = 'u2net_bin_01aug16000'
-    ex_info = 'u2net_dice_02aug42000'
     # ex_info = 'u2net_seg'
+    # ex_info = 'u2net_16_64_dice'
+    # ex_info = 'unet_16_32_4_dice'
+    # ex_info = 'u2net_dice_02aug42000'
+    ex_info = 'u2net_dice_sgd'
 
     print('[INFO] 实验名称：' + ex_info)
 
