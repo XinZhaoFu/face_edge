@@ -134,15 +134,16 @@ def main():
     # ex_info = 'u2net_16_64'
     # ex_info = 'u2net_16_64_bin'
     # ex_info = 'u2net_dice'
-    # ex_info = 'u2net_dice_02aug30000'
+    ex_info = 'u2net_dice_02aug30000'
     # ex_info = 'u2net_bin_02aug10000'
-    ex_info = 'u2net_dice_02aug42000'
     # ex_info = 'u2net_seg'
+    # ex_info = 'u2net_dice_02aug42000'
+    # ex_info = 'u2net_dice_sgd'
 
     checkpoint_save_path = './checkpoint/' + ex_info + '.ckpt'
 
     test_file_path = './data/res/sample/'
-    predict_save_path = './data/res/predict3/'
+    predict_save_path = './data/res/predict4/'
 
     start_time = datetime.datetime.now()
 

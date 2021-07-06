@@ -134,20 +134,20 @@ class train:
 
         # model = DenseNet(filters=64, num_class=1, activation='sigmoid')
 
-        model = UNet(semantic_filters=16,
-                     detail_filters=32,
-                     num_class=1,
-                     semantic_num_cbr=1,
-                     detail_num_cbr=4,
-                     end_activation='sigmoid')
+        # model = UNet(semantic_filters=16,
+        #              detail_filters=32,
+        #              num_class=1,
+        #              semantic_num_cbr=1,
+        #              detail_num_cbr=4,
+        #              end_activation='sigmoid')
 
         # model = BisenetV2(detail_filters=32, aggregation_filters=32, num_class=1, final_act='sigmoid')
 
-        # model = U2Net(rsu_middle_filters=16,
-        #               rsu_out_filters=32,
-        #               num_class=1,
-        #               end_activation='sigmoid',
-        #               only_output=True)
+        model = U2Net(rsu_middle_filters=32,
+                      rsu_out_filters=64,
+                      num_class=1,
+                      end_activation='sigmoid',
+                      only_output=True)
 
         # model = U2Net(rsu_middle_filters=16,
         #               rsu_out_filters=32,
@@ -226,7 +226,7 @@ def train_init():
     # ex_info = 'u2net_16_64_dice'
     # ex_info = 'unet_16_32_4_dice'
     # ex_info = 'u2net_dice_02aug42000'
-    ex_info = 'u2net_dice_sgd'
+    ex_info = 'u2net_32_64_dice'
 
     print('[INFO] 实验名称：' + ex_info)
 
