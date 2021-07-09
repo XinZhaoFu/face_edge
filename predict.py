@@ -7,6 +7,7 @@ from model.densenet import DenseNet
 from model.bisenetv2 import BisenetV2
 from model.unet import UNet
 from model.u2net import U2Net
+from model.u2netL import U2NetL
 import tensorflow as tf
 import numpy as np
 import datetime
@@ -35,11 +36,16 @@ def edge_predict(checkpoint_save_path, test_file_path, predict_save_path, ex_inf
     """
     print('[info]模型加载 图片加载')
     # 加载模型
-    model = U2Net(rsu_middle_filters=16,
-                  rsu_out_filters=32,
-                  num_class=1,
-                  end_activation='sigmoid',
-                  only_output=True)
+    # model = U2Net(rsu_middle_filters=16,
+    #               rsu_out_filters=32,
+    #               num_class=1,
+    #               end_activation='sigmoid',
+    #               only_output=True)
+    model = U2NetL(rsu_middle_filters=16,
+                   rsu_out_filters=32,
+                   num_class=1,
+                   end_activation='sigmoid',
+                   only_output=True)
 
     model.load_weights(checkpoint_save_path)
 
@@ -134,11 +140,14 @@ def main():
     # ex_info = 'u2net_16_64'
     # ex_info = 'u2net_16_64_bin'
     # ex_info = 'u2net_dice'
-    ex_info = 'u2net_dice_02aug30000'
+    # ex_info = 'u2net_dice_02aug30000'
     # ex_info = 'u2net_bin_02aug10000'
     # ex_info = 'u2net_seg'
     # ex_info = 'u2net_dice_02aug42000'
     # ex_info = 'u2net_dice_sgd'
+    # ex_info = 'u2net_32_64_dice'
+    # ex_info = 'u2net_dice_8000'
+    ex_info = 'u2netL_dice_8000'
 
     checkpoint_save_path = './checkpoint/' + ex_info + '.ckpt'
 
