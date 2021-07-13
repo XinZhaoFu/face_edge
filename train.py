@@ -126,40 +126,12 @@ class train:
         :return:
         """
         # with self.strategy.scope():
-        # model = DenseUNet(semantic_filters=16,
-        #                   detail_filters=32,
-        #                   num_class=1,
-        #                   semantic_num_cbr=1,
-        #                   detail_num_cbr=3,
-        #                   end_activation='sigmoid')
 
-        # model = DenseNet(filters=64, num_class=1, activation='sigmoid')
-
-        model = UNet(semantic_filters=16,
-                     detail_filters=32,
-                     num_class=1,
-                     semantic_num_cbr=1,
-                     detail_num_cbr=4,
-                     end_activation='sigmoid')
-
-        # model = BisenetV2(detail_filters=32, aggregation_filters=32, num_class=1, final_act='sigmoid')
-
-        # model = U2Net(rsu_middle_filters=16,
-        #               rsu_out_filters=32,
-        #               num_class=1,
-        #               end_activation='sigmoid',
-        #               only_output=True)
-        # model = U2NetL(rsu_middle_filters=16,
-        #                rsu_out_filters=32,
-        #                num_class=1,
-        #                end_activation='sigmoid',
-        #                only_output=True)
-
-        # model = U2Net(rsu_middle_filters=16,
-        #               rsu_out_filters=32,
-        #               num_class=20,
-        #               end_activation='softmax',
-        #               only_output=True)
+        model = U2Net(rsu_middle_filters=16,
+                      rsu_out_filters=32,
+                      num_class=1,
+                      end_activation='sigmoid',
+                      only_output=True)
 
         if self.learning_rate > 0:
             optimizer = tf.keras.optimizers.SGD(learning_rate=self.learning_rate)
@@ -218,24 +190,7 @@ def plot_learning_curves(history, plt_name):
 
 
 def train_init():
-    # ex_info = 'dense_unet_df32sf16_mix_loss'
-    # ex_info = 'detail_con_unet_face_edge_focal'
-    # ex_info = 'bisev2_mix_loss'
-    # ex_info = 'u2net_dice'
-    # ex_info = 'u2net_16_64_bce_dice'
-    # ex_info = 'u2net_16_64'
-    # ex_info = 'u2net_mix_loss_mix_precision'
-    # ex_info = 'detail_con_unet_face_edge'
-    # ex_info = 'u2net_dice_02aug42000'
-    # ex_info = 'u2net_bin_02aug10000'
-    # ex_info = 'u2net_bin_01aug16000'
-    # ex_info = 'u2net_seg'
-    # ex_info = 'u2net_16_64_dice'
-    ex_info = 'unet_16_32_4_dice'
-    # ex_info = 'u2net_dice_02aug42000'
-    # ex_info = 'u2net_32_64_dice'
-    # ex_info = 'u2net_dice_8000'
-    # ex_info = 'u2netL_dice_8000'
+    ex_info = 'u2net_dice_02aug42000'
 
     print('[INFO] 实验名称：' + ex_info)
 
