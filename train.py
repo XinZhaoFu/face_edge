@@ -143,7 +143,7 @@ class train:
         model.compile(
             optimizer=optimizer,
             loss=dice_loss(),
-            metrics=[tf.keras.metrics.Recall(), tf.keras.metrics.Precision()]
+            metrics=[tf.keras.metrics.MeanIoU(num_classes=2)]
         )
 
         # model.compile(

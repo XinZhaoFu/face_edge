@@ -14,7 +14,14 @@ from data_utils.label_utils import get_point, fit_interpolation, draw_line, get_
 
 np.set_printoptions(threshold=np.inf)
 
-print(0.35//0.05)
+ori_label = cv2.imread('./data/res/predict4/2021_07_15_14_56_44_522112_u2net_dice_02aug42000_demo1.png', 0)
+ori_label = cv2.resize(ori_label, dsize=(2048, 2048), interpolation=cv2.INTER_NEAREST)
+res = cv2.erode(ori_label, kernel=cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))
+# (rows, cols) = np.where(res >= 200)
+# res[rows, cols] = 255
+
+cv2.imwrite('./data/temp/temp/test_erode.png', res)
+
 
 # label = cv2.imread('./data/temp/celeb_semantic_label/0.png', 0)
 # rows, cols = get_lower_nose_edge(label)

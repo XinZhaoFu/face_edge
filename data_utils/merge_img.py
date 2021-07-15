@@ -45,5 +45,30 @@ def merge_img():
     cv2.imwrite('../data/res/merge/res_img.jpg', res_img)
 
 
+def merge_ppseg_demo():
+    img_list = glob('../data/res/ppseg_demo/' + '*.jpg')
+    img_list.sort()
+    res_img = np.zeros(shape=(512 * 6, 512 * 41, 3), dtype=np.uint8)
+
+    for row in range(41):
+        for col in range(2):
+            img1 = cv2.imread(img_list[((row+1)*(col+1)-1)])
+            img2 = cv2.imread(img_list[((row+1)*(col+1)-1) + 82])
+            img3 = cv2.imread(img_list[((row+1)*(col+1)-1) + 164])
+
+            img1 = cv2.resize(img1, dsize=(512, 512))
+            img2 = cv2.resize(img2, dsize=(512, 512))
+            img3 = cv2.resize(img3, dsize=(512, 512))
+            if col == 0:
+                res_img[512 * 0:512 * 1, 512 * row:512 * (row + 1)] = img1
+                res_img[512 * 1:512 * 2, 512 * row:512 * (row + 1)] = img2
+                res_img[512 * 2:512 * 3, 512 * row:512 * (row + 1)] = img3
+            if col == 1:
+                res_img[512 * 3:512 * 4, 512 * row:512 * (row + 1)] = img1
+                res_img[512 * 4:512 * 5, 512 * row:512 * (row + 1)] = img2
+                res_img[512 * 5:512 * 6, 512 * row:512 * (row + 1)] = img3
+    cv2.imwrite('../data/res/ppseg_demo/res_img.jpg', res_img)
+
+
 if __name__ == '__main__':
-    merge_img()
+    merge_ppseg_demo()

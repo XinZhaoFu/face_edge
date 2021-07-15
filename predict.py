@@ -47,7 +47,7 @@ def edge_predict(checkpoint_save_path, test_file_path, predict_save_path, ex_inf
     test_file_path_list = glob.glob(test_file_path + '*.jpg')
 
     for test_file in tqdm(test_file_path_list):
-        test_img, test_img_name = get_predict_img(test_file, is_crop=True)
+        test_img, test_img_name = get_predict_img(test_file, is_crop=False)
         test_img_name = img_name_complement + '_' + ex_info + '_' + test_img_name + '.png'
 
         predict_temp = model.predict(test_img)

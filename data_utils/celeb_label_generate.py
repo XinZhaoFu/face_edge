@@ -4,8 +4,9 @@ import datetime
 
 import numpy as np
 from tqdm import tqdm
-from label_utils import get_contour_pupil_label, get_augmentation, get_class_code, get_nose_label, concat_label, \
+from label_utils import get_contour_pupil_label, get_class_code, get_nose_label, concat_label, \
     get_lower_nose_edge
+from data_utils.augmentation_utils import get_augmentation
 from utils import recreate_dir
 
 """
@@ -89,10 +90,7 @@ def add_contour_nose_label(img_path,
                            nose_point_file_path,
                            save_label_path,
                            save_img_path,
-                           is_augmentation=False,
-                           is_edge=False,
-                           is_lower_nose_edge=True,
-                           is_seg=False):
+                           is_augmentation=False):
     """
     在语义分割标签的基础上获得含有虹膜和鼻子的轮廓标签  并进行离线的数据扩增
 
@@ -113,7 +111,6 @@ def add_contour_nose_label(img_path,
     contour_point_file_list = glob(contour_point_file_path + '*.txt')
     nose_point_file_list = glob(nose_point_file_path + '*.txt')
 
-    print(len(img_file_list), len(semantic_label_file_list), len(contour_point_file_list), len(nose_point_file_list))
     assert len(img_file_list) == len(semantic_label_file_list) == \
            len(contour_point_file_list) == len(nose_point_file_list)
 
@@ -136,29 +133,14 @@ def add_contour_nose_label(img_path,
         semantic_label = cv2.imread(semantic_label_path, 0)
         img_rows, img_cols, _ = img.shape
 
-        con_label = np.zeros(shape=semantic_label.shape)
-
-        if is_edge:
-            con_label = get_contour_pupil_label(label=semantic_label,
-                                                contour_point_file_path=contour_point_path,
-                                                img_rows=img_rows,
-                                                img_cols=img_cols,
-                                                is_canny=True)
-            con_label = get_nose_label(label=con_label,
-                                       img_rows=img_rows,
-                                       img_cols=img_cols,
-                                       nose_point_file_path=nose_point_path,
-                                       draw_type=0)
-
-        if is_lower_nose_edge:
-            contours = get_contour_pupil_label(label=semantic_label,
-                                               contour_point_file_path=contour_point_path,
-                                               img_rows=img_rows,
-                                               img_cols=img_cols,
-                                               is_canny=False)
-            con_label = get_lower_nose_edge(semantic_label)
-            cv2.drawContours(con_label, contours, -1, 255, 1)
-        # if is_seg:
+        contours = get_contour_pupil_label(label=semantic_label,
+                                           contour_point_file_path=contour_point_path,
+                                           img_rows=img_rows,
+                                           img_cols=img_cols,
+                                           is_canny=False)
+        con_label = get_lower_nose_edge(semantic_label)
+        cv2.drawContours(con_label, contours, -1, 255, 1)
+        con_label = cv2.dilate(con_label, kernel=cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))
 
         cv2.imwrite(save_label_path + label_name + '.png', con_label)
 
@@ -170,10 +152,7 @@ def add_contour_nose_label(img_path,
 def main():
     is_get_semantic_label = False
     is_augmentation = True
-    is_edge = False
-    is_lower_nose_edge = True
-    is_seg = False
-    is_all_file = False
+    is_all_file = True
     is_recreate = False
 
     if is_all_file:
@@ -208,10 +187,7 @@ def main():
                            nose_point_file_path=nose_point_file_path,
                            save_label_path=save_label_path,
                            save_img_path=save_img_path,
-                           is_augmentation=is_augmentation,
-                           is_edge=is_edge,
-                           is_lower_nose_edge=is_lower_nose_edge,
-                           is_seg=is_seg)
+                           is_augmentation=is_augmentation)
 
 
 if __name__ == '__main__':

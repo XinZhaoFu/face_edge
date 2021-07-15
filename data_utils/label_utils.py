@@ -471,7 +471,7 @@ def get_nose_by_seg_label(label, small_rate=1.0):
     nose_label = np.zeros(shape=label.shape, dtype=np.uint8)
     rows, cols = label.shape
 
-    (tar_rows, tar_cols) = get_target_point(label, 6)
+    (tar_rows, tar_cols) = np.where(label == 6)
     label[tar_rows, tar_cols] = 1
     nose_label[tar_rows, tar_cols] = 6
 
@@ -485,196 +485,18 @@ def get_nose_by_seg_label(label, small_rate=1.0):
     new_centroid_row, new_centroid_col = int(small_rate * ori_centroid_row), int(small_rate * ori_centroid_col)
 
     temp[ori_centroid_row - new_centroid_row: ori_centroid_row - new_centroid_row + s_rows,
-    ori_centroid_col - new_centroid_col: ori_centroid_col - new_centroid_col + s_cols] = nose_label[:, :]
+         ori_centroid_col - new_centroid_col: ori_centroid_col - new_centroid_col + s_cols] = nose_label[:, :]
 
-    (temp_rows, temp_cols) = get_target_point(temp, 6)
+    (temp_rows, temp_cols) = np.where(temp == 6)
     label[temp_rows, temp_cols] = 6
 
     return label
-
-
-def get_target_point(label, target):
-    """
-    对于一个数组(这里用于2维label) 给出指定值的索引集合
-
-    :param label:
-    :param target:
-    :return:
-    """
-    points = np.where(label == target)
-    points = list(points)
-    res_points = []
-    for index in range(len(points[0])):
-        res_points.append([points[0][index], points[1][index]])
-
-    return res_points
-
-
-def random_crop(img, label):
-    """
-    随机裁剪  因为img尺寸和label尺寸不一定对应 前半部分是img和label对应的情况 后面是不对应的情况
-
-    :param img:
-    :param label:
-    :return:
-    """
-    img_rows, img_cols, img_channel = img.shape
-    label_rows, label_cols = label.shape
-
-    if img_rows == label_rows and img_cols == label_cols:
-        if img_rows >= img_cols:
-            random_crop_length = randint(img_rows // 4, img_rows // 2)
-        else:
-            random_crop_length = randint(img_cols // 4, img_cols // 2)
-
-        random_crop_row_init = randint(1, img_rows - random_crop_length)
-        random_crop_col_init = randint(1, img_cols - random_crop_length)
-
-        crop_img = np.empty(shape=(random_crop_length, random_crop_length, img_channel), dtype=np.uint8)
-        crop_label = np.empty(shape=(random_crop_length, random_crop_length), dtype=np.uint8)
-
-        crop_img[:, :, :] = img[random_crop_row_init:random_crop_row_init + random_crop_length,
-                            random_crop_col_init:random_crop_col_init + random_crop_length, :]
-        crop_label[:, :] = label[random_crop_row_init:random_crop_row_init + random_crop_length,
-                           random_crop_col_init:random_crop_col_init + random_crop_length]
-    else:
-        resize_rate = label_rows / img_rows
-        assert resize_rate == label_cols / img_cols
-
-        if img_rows >= img_cols:
-            random_crop_img_length = randint(img_rows // 4, img_rows // 2)
-        else:
-            random_crop_img_length = randint(img_cols // 4, img_cols // 2)
-        random_crop_label_length = int(random_crop_img_length * resize_rate)
-
-        random_crop_img_row_init = randint(1, img_rows - random_crop_img_length)
-        random_crop_img_col_init = randint(1, img_cols - random_crop_img_length)
-
-        random_crop_label_row_init = randint(1, label_rows - random_crop_label_length)
-        random_crop_label_col_init = randint(1, label_cols - random_crop_label_length)
-
-        crop_img = np.empty(shape=(random_crop_img_length, random_crop_img_length, img_channel), dtype=np.uint8)
-        crop_label = np.empty(shape=(random_crop_label_length, random_crop_label_length), dtype=np.uint8)
-
-        crop_img[:, :, :] = img[random_crop_img_row_init:random_crop_img_row_init + random_crop_img_length,
-                            random_crop_img_col_init:random_crop_img_col_init + random_crop_img_length, :]
-        crop_label[:, :] = label[random_crop_label_row_init:random_crop_label_row_init + random_crop_label_length,
-                           random_crop_label_col_init:random_crop_label_col_init + random_crop_label_length]
-
-    return crop_img, crop_label
-
-
-def random_color_scale(img, alpha_rate=0.2, base_beta=15):
-    """
-    做一个颜色扰动 img = img * alpha + beta
-
-    :param img:
-    :param alpha_rate:
-    :param base_beta:
-    :return:
-    """
-    alpha = uniform(1 - alpha_rate, 1 + alpha_rate)
-    beta = randint(0 - base_beta, base_beta)
-    img = img * alpha + beta
-
-    return img
-
-
-def flip(img, label):
-    img = cv2.flip(img, 1)
-    label = cv2.flip(label, 1)
-
-    return img, label
-
-
-def cutout(img, mask_rate=0.3):
-    """
-    对图片进行cutout 遮盖位置随机
-    遮盖长度为空时用默认值
-    过拟合增大，欠拟合缩小，自行调节
-    添加遮盖前 对图像一圈进行0填充
-
-    :param img:
-    :param mask_rate:
-    :return:cutout后的图像
-    """
-    img_rows, img_cols, img_channel = img.shape
-    mask_rows = int(img_rows * mask_rate)
-    mask_cols = int(img_cols * mask_rate)
-    region_x, region_y = randint(0, img_rows + mask_rows), randint(0, img_cols + mask_cols)
-
-    fill_img = np.zeros((img_rows + mask_rows * 2, img_cols + mask_cols * 2, img_channel))
-    fill_img[mask_rows:mask_rows + img_rows, mask_cols:mask_cols + img_cols] = img
-    fill_img[region_x:region_x + mask_rows, region_y:region_y + mask_cols] = 0
-    img = fill_img[mask_rows:mask_rows + img_rows, mask_cols:mask_cols + img_cols]
-
-    return img
-
-
-def gridMask(img, rate=0.1):
-    """
-    对图片进行gridmask
-    每行每列各十个 以边均匀十等分 共计10*10个单元块  在每一个单元块内进行遮盖
-    每一单元块其边长 = mask长度、offset偏差和留白
-    长方形没做适配
-    若干次的经验来看，过拟合增大rate，欠拟合缩小rate，但毕竟只是经验值
-
-    :param img:
-    :param rate: mask长度与一单元块边长的比值
-    :return: gridmask后的图像
-    """
-    img_rows, img_cols, img_channel = img.shape
-    fill_img_rows_length = int(img_rows + 0.2 * img_rows)
-    fill_img_cols_length = int(img_cols + 0.2 * img_cols)
-    rows_offset = randint(0, int(0.1 * fill_img_rows_length))
-    cols_offset = randint(0, int(0.1 * fill_img_cols_length))
-    rows_mask_length = int(0.1 * fill_img_rows_length * rate)
-    cols_mask_length = int(0.1 * fill_img_cols_length * rate)
-
-    fill_img = np.zeros((fill_img_rows_length, fill_img_cols_length, img_channel))
-    fill_img[int(0.1 * img_rows):int(0.1 * img_rows) + img_rows,
-    int(0.1 * img_cols):int(0.1 * img_cols) + img_cols] = img
-
-    for width_num in range(10):
-        for length_num in range(10):
-            length_base_patch = int(0.1 * fill_img_rows_length * length_num) + rows_offset
-            width_base_patch = int(0.1 * fill_img_cols_length * width_num) + cols_offset
-            fill_img[length_base_patch:length_base_patch + rows_mask_length,
-            width_base_patch:width_base_patch + cols_mask_length] = 0
-
-    img = fill_img[int(0.1 * img_rows):int(0.1 * img_rows) + img_rows,
-          int(0.1 * img_cols):int(0.1 * img_cols) + img_cols]
-
-    return img
 
 
 def check_coordinate(coordinate):
     if coordinate[1] <= coordinate[0] or coordinate[3] <= coordinate[2]:
         return False
     return True
-
-
-def random_filling(img, label):
-    """
-    目标是在图片周围填充一圈空值  实现方式是生成一个大的空值图 找一随机位置将原图填进去
-
-    :param img:
-    :param label:
-    :return:
-    """
-    img = cv2.resize(img, dsize=(256, 256))
-    label = cv2.resize(label, dsize=(256, 256), interpolation=cv2.INTER_AREA)
-    # _, label = cv2.threshold(label, 0, 255, cv2.THRESH_BINARY)
-
-    filling_img = np.zeros(shape=(512, 512, 3))
-    filling_label = np.zeros(shape=(512, 512))
-
-    random_x, random_y = randint(0, 256), randint(0, 256)
-
-    filling_img[random_x:random_x + 256, random_y:random_y + 256] = img
-    filling_label[random_x:random_x + 256, random_y:random_y + 256] = label
-
-    return filling_img, filling_label
 
 
 def get_class_code(class_label):
@@ -771,53 +593,3 @@ def concat_label(labels, class_codes, priority=None, is_nose=True):
     con_label = overlay_label(priority_labels, priority_labels_class_code)
 
     return con_label
-
-
-def get_augmentation(img,
-                     con_label,
-                     save_img_path,
-                     save_label_path,
-                     img_name,
-                     label_name,
-                     random_crop_num=1,
-                     gridmask_num=1,
-                     cutout_num=1,
-                     random_filling_num=1):
-    """
-    数据扩增
-
-    :param random_filling_num:
-    :param cutout_num:
-    :param gridmask_num:
-    :param random_crop_num:
-    :param img:
-    :param con_label:
-    :param save_img_path:
-    :param save_label_path:
-    :param img_name:
-    :param label_name:
-    :return:
-    """
-    # random_crop
-    for index in range(random_crop_num):
-        crop_img, crop_label = random_crop(img, con_label)
-        cv2.imwrite(save_img_path + img_name + '_random_crop_' + str(index) + '.jpg', crop_img)
-        cv2.imwrite(save_label_path + label_name + '_random_crop_' + str(index) + '.png', crop_label)
-
-    # gridmask
-    for index in range(gridmask_num):
-        grid_mask_img = gridMask(img, rate=0.1)
-        cv2.imwrite(save_img_path + img_name + '_gridmask_' + str(index) + '.jpg', grid_mask_img)
-        cv2.imwrite(save_label_path + label_name + '_gridmask_' + str(index) + '.png', con_label)
-
-    # cutout
-    for index in range(cutout_num):
-        cutout_img = cutout(img, mask_rate=0.3)
-        cv2.imwrite(save_img_path + img_name + '_cutout_' + str(index) + '.jpg', cutout_img)
-        cv2.imwrite(save_label_path + label_name + '_cutout_' + str(index) + '.png', con_label)
-
-    # random_filling
-    for index in range(random_filling_num):
-        filling_img, filling_label = random_filling(img, con_label)
-        cv2.imwrite(save_img_path + img_name + '_random_filling_' + str(index) + '.jpg', filling_img)
-        cv2.imwrite(save_label_path + label_name + '_random_filling_' + str(index) + '.png', filling_label)
