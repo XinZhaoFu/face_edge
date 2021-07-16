@@ -104,15 +104,14 @@ def cutout(img, mask_rate=0.3):
     :param mask_rate:
     :return:cutout后的图像
     """
-    img_rows, img_cols, img_channel = img.shape
+    img_rows, img_cols, _ = img.shape
     mask_rows = int(img_rows * mask_rate)
     mask_cols = int(img_cols * mask_rate)
-    region_x, region_y = randint(0, img_rows + mask_rows), randint(0, img_cols + mask_cols)
+    region_center_x, region_center_y = randint(0, img_rows), randint(0, img_cols)
+    region_x0, region_x1 = max(0, region_center_x - mask_rows // 2), min(img_rows, region_center_x + mask_rows // 2)
+    region_y0, region_y1 = max(0, region_center_y - mask_cols // 2), min(img_cols, region_center_y + mask_cols // 2)
 
-    fill_img = np.zeros((img_rows + mask_rows * 2, img_cols + mask_cols * 2, img_channel))
-    fill_img[mask_rows:mask_rows + img_rows, mask_cols:mask_cols + img_cols] = img
-    fill_img[region_x:region_x + mask_rows, region_y:region_y + mask_cols] = 0
-    img = fill_img[mask_rows:mask_rows + img_rows, mask_cols:mask_cols + img_cols]
+    img[region_x0:region_x1, region_y0:region_y1, :] = 0
 
     return img
 
@@ -208,9 +207,15 @@ def get_augmentation(img,
         cv2.imwrite(save_img_path + img_name + '_random_crop_' + str(index) + '.jpg', crop_img)
         cv2.imwrite(save_label_path + label_name + '_random_crop_' + str(index) + '.png', crop_label)
 
+    # random_filling
+    for index in range(random_filling_num):
+        filling_img, filling_label = random_filling(img, con_label)
+        cv2.imwrite(save_img_path + img_name + '_random_filling_' + str(index) + '.jpg', filling_img)
+        cv2.imwrite(save_label_path + label_name + '_random_filling_' + str(index) + '.png', filling_label)
+
     # gridmask
     for index in range(gridmask_num):
-        gridmask_img = gridMask(img, rate=0.1)
+        gridmask_img = gridMask(img, rate=0.3)
         gridmask_img, gridmask_label = random_rotate(gridmask_img, con_label)
         gridmask_img, gridmask_label = random_flip(gridmask_img, gridmask_label)
         cv2.imwrite(save_img_path + img_name + '_gridmask_' + str(index) + '.jpg', gridmask_img)
@@ -223,9 +228,3 @@ def get_augmentation(img,
         cutout_img, cutout_label = random_flip(cutout_img, cutout_label)
         cv2.imwrite(save_img_path + img_name + '_cutout_' + str(index) + '.jpg', cutout_img)
         cv2.imwrite(save_label_path + label_name + '_cutout_' + str(index) + '.png', cutout_label)
-
-    # random_filling
-    for index in range(random_filling_num):
-        filling_img, filling_label = random_filling(img, con_label)
-        cv2.imwrite(save_img_path + img_name + '_random_filling_' + str(index) + '.jpg', filling_img)
-        cv2.imwrite(save_label_path + label_name + '_random_filling_' + str(index) + '.png', filling_label)

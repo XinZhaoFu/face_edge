@@ -152,7 +152,7 @@ def add_contour_nose_label(img_path,
 def main():
     is_get_semantic_label = False
     is_augmentation = True
-    is_all_file = True
+    is_all_file = False
     is_recreate = False
 
     if is_all_file:
