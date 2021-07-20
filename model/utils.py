@@ -1,7 +1,6 @@
 from tensorflow.keras.layers import Conv2D, BatchNormalization, Activation, SeparableConv2D, \
     DepthwiseConv2D, MaxPooling2D, UpSampling2D, concatenate
 from tensorflow.keras import Model, regularizers, Sequential
-import tensorflow as tf
 
 
 class Con_Bn_Act(Model):
@@ -13,7 +12,7 @@ class Con_Bn_Act(Model):
                  activation=None,
                  dilation_rate=1,
                  name=None,
-                 kernel_regularizer=False,
+                 kernel_regularizer=True,
                  train_able=True):
         super(Con_Bn_Act, self).__init__()
         self.kernel_regularizer = kernel_regularizer

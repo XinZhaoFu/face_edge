@@ -104,7 +104,7 @@ class train:
         self.augmentation_rate = augmentation_rate
         self.learning_rate = learning_rate
         self.checkpoint_save_path = checkpoint_save_path + ex_info + '.ckpt'
-        # self.checkpoint_input_path = './checkpoint/' + 'u2net_dice_02aug30000' + '.ckpt'
+        # self.checkpoint_input_path = './checkpoint/' + 'u2net_dice_02aug42000' + '.ckpt'
         self.checkpoint_input_path = self.checkpoint_save_path
         print('[INFO] checkpoint_input_path:\t' + self.checkpoint_input_path)
 
@@ -190,7 +190,8 @@ def plot_learning_curves(history, plt_name):
 
 
 def train_init():
-    ex_info = 'u2net_dice_02aug42000'
+    # ex_info = 'u2net_dice_02aug42000'
+    ex_info = 'u2net_dice_02aug42000_l2'
 
     print('[INFO] 实验名称：' + ex_info)
 
