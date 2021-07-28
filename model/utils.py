@@ -12,7 +12,7 @@ class Con_Bn_Act(Model):
                  activation=None,
                  dilation_rate=1,
                  name=None,
-                 kernel_regularizer=True,
+                 kernel_regularizer=False,
                  train_able=True):
         super(Con_Bn_Act, self).__init__()
         self.kernel_regularizer = kernel_regularizer

@@ -1,5 +1,4 @@
 from random import randint, uniform
-
 import cv2
 import numpy as np
 
@@ -39,7 +38,7 @@ def random_crop(img, label):
     return crop_img, crop_label
 
 
-def random_color_scale(img, alpha_rate=0.2, base_beta=15):
+def random_color_scale(img, alpha_rate=0.3, base_beta=30):
     """
     做一个颜色扰动 img = img * alpha + beta
 
@@ -48,9 +47,20 @@ def random_color_scale(img, alpha_rate=0.2, base_beta=15):
     :param base_beta:
     :return:
     """
-    alpha = uniform(1 - alpha_rate, 1 + alpha_rate)
-    beta = randint(0 - base_beta, base_beta)
-    img = img * alpha + beta
+    img_rows, img_cols, img_channels = img.shape
+    temp_img_split = np.zeros(shape=(img_rows, img_cols), dtype=np.uint8)
+    for index in range(img_channels):
+        temp_img_split = img[:, :, index]
+        temp_img_split_beta = np.random.randint(-base_beta, base_beta, size=(img_rows, img_cols))
+        alpha = uniform(1 - alpha_rate, 1 + alpha_rate)
+        temp_img_split = temp_img_split * alpha + temp_img_split_beta
+
+        (temp_rows, temp_cols) = np.where(temp_img_split < 0)
+        temp_img_split[temp_rows, temp_cols] = 0
+        (temp_rows, temp_cols) = np.where(temp_img_split > 255)
+        temp_img_split[temp_rows, temp_cols] = 255
+
+        img[:, :, index] = temp_img_split
 
     return img
 
@@ -216,6 +226,7 @@ def get_augmentation(img,
     # gridmask
     for index in range(gridmask_num):
         gridmask_img = gridMask(img, rate=0.3)
+        gridmask_img = random_color_scale(gridmask_img, alpha_rate=0.3, base_beta=30)
         gridmask_img, gridmask_label = random_rotate(gridmask_img, con_label)
         gridmask_img, gridmask_label = random_flip(gridmask_img, gridmask_label)
         cv2.imwrite(save_img_path + img_name + '_gridmask_' + str(index) + '.jpg', gridmask_img)
@@ -224,6 +235,7 @@ def get_augmentation(img,
     # cutout
     for index in range(cutout_num):
         cutout_img = cutout(img, mask_rate=0.3)
+        cutout_img = random_color_scale(cutout_img, alpha_rate=0.3, base_beta=30)
         cutout_img, cutout_label = random_rotate(cutout_img, con_label)
         cutout_img, cutout_label = random_flip(cutout_img, cutout_label)
         cv2.imwrite(save_img_path + img_name + '_cutout_' + str(index) + '.jpg', cutout_img)

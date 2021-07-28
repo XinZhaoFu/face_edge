@@ -190,8 +190,8 @@ def plot_learning_curves(history, plt_name):
 
 
 def train_init():
-    # ex_info = 'u2net_dice_02aug42000'
-    ex_info = 'u2net_dice_02aug42000_l2'
+    ex_info = 'u2net_dice_02aug42000'
+    # ex_info = 'u2net_dice_02aug42000_l2'
 
     print('[INFO] 实验名称：' + ex_info)
 

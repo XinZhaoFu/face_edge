@@ -1,12 +1,9 @@
 from glob import glob
 import cv2
 import datetime
-
-import numpy as np
 from tqdm import tqdm
-from label_utils import get_contour_pupil_label, get_class_code, get_nose_label, concat_label, \
-    get_lower_nose_edge
-from data_utils.augmentation_utils import get_augmentation
+from label_utils import get_contour_pupil_label, get_class_code, concat_label, get_lower_nose_edge
+from augmentation_utils import get_augmentation
 from utils import recreate_dir
 
 """
@@ -140,7 +137,7 @@ def add_contour_nose_label(img_path,
                                            is_canny=False)
         con_label = get_lower_nose_edge(semantic_label)
         cv2.drawContours(con_label, contours, -1, 255, 1)
-        con_label = cv2.dilate(con_label, kernel=cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))
+        # con_label = cv2.dilate(con_label, kernel=cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3)))
 
         cv2.imwrite(save_label_path + label_name + '.png', con_label)
 
@@ -152,7 +149,7 @@ def add_contour_nose_label(img_path,
 def main():
     is_get_semantic_label = False
     is_augmentation = True
-    is_all_file = False
+    is_all_file = True
     is_recreate = False
 
     if is_all_file:
