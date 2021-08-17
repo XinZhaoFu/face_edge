@@ -14,13 +14,18 @@ from data_utils.label_utils import get_point, fit_interpolation, draw_line, get_
 
 np.set_printoptions(threshold=np.inf)
 
-img = np.ones(shape=(64, 64, 3), dtype=np.uint8)
-img = 128 * img
-# img = cv2.imread('./data/res/sample/demo1.jpg')
-from data_utils.augmentation_utils import random_color_scale
-img = random_color_scale(img)
-cv2.imwrite('./data/temp/temp/demo1_random_color.jpg', img)
-print(img)
+lapa_img_path = './data/lapa_ori_img/'
+lapa_label_path = './data/lapa_ori_label/'
+lapa_img_file_list = glob(lapa_img_path + '*.*')
+lapa_label_file_list = glob(lapa_label_path + '*.*')
+
+# img = np.ones(shape=(64, 64, 3), dtype=np.uint8)
+# img = 128 * img
+# # img = cv2.imread('./data/res/sample/demo1.jpg')
+# from data_utils.augmentation_utils import random_color_scale
+# img = random_color_scale(img)
+# cv2.imwrite('./data/temp/temp/demo1_random_color.jpg', img)
+# print(img)
 
 # ori_label = cv2.imread('./data/res/predict4/2021_07_15_14_56_44_522112_u2net_dice_02aug42000_demo1.png', 0)
 # ori_label = cv2.resize(ori_label, dsize=(2048, 2048), interpolation=cv2.INTER_NEAREST)
